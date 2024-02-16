@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -38,33 +39,24 @@ public class InMemoryItemStorage implements ItemStorage {
 
     @Override
     public List<ItemDto> getAllItemsByUserId(int userId) {
-        List<ItemDto> itemsUser = new ArrayList<>();
-        for (Item usId : items.values()) {
-            if (usId.getOwner() == userId) {
-                itemsUser.add(itemMapper.toItemDto(usId));
-            }
-        }
-        log.info("Отправлен список вещей пользователя с id {} \n {}", userId, itemsUser);
-        return itemsUser;
+        log.info("Отправлен список вещей пользователя с id {}", userId);
+        return items.values().stream()
+                .filter(item -> item.getOwner() == userId)
+                .map(itemMapper::toItemDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<ItemDto> searchBySubstring(String str, int userId) {
-        List<Item> allItems = new ArrayList<>(items.values());
-        List<ItemDto> foundItems = new ArrayList<>();
         if (str.isEmpty()) {
-            return foundItems;
+            return new ArrayList<>();
         }
-        for (Item usId : allItems) {
-            if (usId.getAvailable().equals(false)) {
-                continue;
-            }
-            if (usId.getName().toLowerCase().contains(str.toLowerCase()) |
-                    usId.getDescription().toLowerCase().contains(str.toLowerCase())) {
-                foundItems.add(itemMapper.toItemDto(usId));
-            }
-        }
-        log.info("Отправлен список вещей содержащих в своём названии или описании подстроку {} \n {}", str, foundItems);
+        List<ItemDto> foundItems = items.values().stream()
+                .filter(item -> item.getAvailable() && (item.getName().toLowerCase().contains(str.toLowerCase())
+                        || item.getDescription().toLowerCase().contains(str.toLowerCase())))
+                .map(itemMapper::toItemDto)
+                .collect(Collectors.toList());
+            log.info("Отправлен список вещей, содержащих в своем названии или описании подстроку '{}': {}", str, foundItems);
         return foundItems;
     }
 

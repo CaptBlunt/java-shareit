@@ -7,6 +7,7 @@ import ru.practicum.shareit.exception.ValidationUserException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -40,12 +41,9 @@ public class UserService {
     }
 
     public List<String> getAllEmails() {
-        List<UserDto> allUsers = inMemoryUserStorage.getAllUsers();
-        List<String> allEmails = new ArrayList<>();
-        for (UserDto user : allUsers) {
-            allEmails.add(user.getEmail());
-        }
-        return allEmails;
+        return inMemoryUserStorage.getAllUsers().stream()
+                .map(UserDto::getEmail)
+                .collect(Collectors.toList());
     }
 
     public void validateUser(User user) {

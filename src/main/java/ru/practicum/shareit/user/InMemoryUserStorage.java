@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -30,11 +31,9 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public List<UserDto> getAllUsers() {
-        List<UserDto> allUsers = new ArrayList<>();
-        for (User person : users.values()) {
-            allUsers.add(userMapper.toUserDto(person));
-        }
-        return allUsers;
+        return users.values().stream()
+                .map(userMapper::toUserDto)
+                .collect(Collectors.toList());
     }
 
     @Override
