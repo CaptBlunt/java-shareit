@@ -15,8 +15,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class InMemoryUserStorage implements UserStorage {
 
-    private final static String NOT_FOUND_USER = "Пользователь не найден";
-
     private final UserMapper userMapper;
     private final Map<Integer, User> users = new HashMap<>();
 
@@ -43,7 +41,7 @@ public class InMemoryUserStorage implements UserStorage {
     public UserDto getUserById(Integer id) {
         if (!users.containsKey(id)) {
             log.info("Пользователь с id {} не найден", id);
-            throw new NotFoundException(NOT_FOUND_USER);
+            throw new NotFoundException("Пользователь не найден");
         }
         User searchedUser = users.get(id);
         log.info("Отправлен пользователь с id {}", searchedUser);

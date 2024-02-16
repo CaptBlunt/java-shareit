@@ -14,7 +14,6 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 public class InMemoryItemStorage implements ItemStorage {
-    private final static String NOT_FOUND_ITEM = "Вещь не найден";
 
     private final ItemMapper itemMapper;
     private final Map<Integer, Item> items = new HashMap<>();
@@ -80,7 +79,7 @@ public class InMemoryItemStorage implements ItemStorage {
         Item updatebleItem = items.get(id);
         if (updatebleItem == null || userId != updatebleItem.getOwner()) {
             log.warn("Вещь с id {} не найдена, либо пользователь с id {} не является её владельцем", id, userId);
-            throw new NotFoundException(NOT_FOUND_ITEM);
+            throw new NotFoundException("Вещь не найден");
         }
         item.setId(id);
         item.setOwner(userId);
