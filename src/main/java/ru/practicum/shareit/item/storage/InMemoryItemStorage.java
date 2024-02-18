@@ -1,9 +1,10 @@
-package ru.practicum.shareit.item;
+package ru.practicum.shareit.item.storage;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.Item;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,48 +16,43 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class InMemoryItemStorage implements ItemStorage {
-
-    private final ItemMapper itemMapper;
     private final Map<Integer, Item> items = new HashMap<>();
 
     private Integer generatorId = 0;
 
     @Override
-    public ItemDto createItem(Item item, Integer userId) {
+    public Item createItem(Item item) {
         item.setId(++generatorId);
-        item.setOwner(userId);
         items.put(item.getId(), item);
         log.info("Добавлена вещь {}", item);
-        return itemMapper.toItemDto(item);
+        return item;
     }
 
     @Override
-    public ItemDto getItemById(Integer id) {
+    public Item getItemById(Integer id) {
         Item serchedItem = items.get(id);
         log.info("Отправлена вещь {}", serchedItem);
-        return itemMapper.toItemDto(serchedItem);
+        return serchedItem;
     }
 
     @Override
-    public List<ItemDto> getAllItemsByUserId(int userId) {
+    public List<Item> getAllItemsByUserId(int userId) {
         log.info("Отправлен список вещей пользователя с id {}", userId);
         return items.values().stream()
                 .filter(item -> item.getOwner() == userId)
-                .map(itemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<ItemDto> searchBySubstring(String str, int userId) {
-        if (str.isEmpty()) {
+    public List<Item> searchBySubstring(String str, int userId) {
+        if (str == null || str.isEmpty()) {
             return new ArrayList<>();
         }
-        List<ItemDto> foundItems = items.values().stream()
+        List<Item> foundItems = items.values().stream()
                 .filter(item -> item.getAvailable() && (item.getName().toLowerCase().contains(str.toLowerCase())
                         || item.getDescription().toLowerCase().contains(str.toLowerCase())))
-                .map(itemMapper::toItemDto)
                 .collect(Collectors.toList());
-            log.info("Отправлен список вещей, содержащих в своем названии или описании подстроку '{}': {}", str, foundItems);
+        log.info("Отправлен список вещей, содержащих в своем названии или описании подстроку '{}': {}", str, foundItems);
         return foundItems;
     }
 
@@ -67,7 +63,7 @@ public class InMemoryItemStorage implements ItemStorage {
     }
 
     @Override
-    public ItemDto updateItem(Integer id, Item item, Integer userId) {
+    public Item updateItem(Integer id, Item item, Integer userId) {
         Item updatebleItem = items.get(id);
         if (updatebleItem == null || userId != updatebleItem.getOwner()) {
             log.warn("Вещь с id {} не найдена, либо пользователь с id {} не является её владельцем", id, userId);

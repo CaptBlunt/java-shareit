@@ -1,6 +1,7 @@
-package ru.practicum.shareit.item;
+package ru.practicum.shareit.item.dto;
 
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.item.Item;
 
 @Service
 public class ItemMapper {
