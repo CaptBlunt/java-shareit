@@ -16,7 +16,13 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse validationItem(final ValidateItemException e) {
+    public ErrorResponse validateException(final ValidateException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse accessibilityErrorException(final AccessibilityErrorException e) {
         return new ErrorResponse(e.getMessage());
     }
 }

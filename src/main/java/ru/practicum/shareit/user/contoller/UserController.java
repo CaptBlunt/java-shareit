@@ -3,9 +3,9 @@ package ru.practicum.shareit.user.contoller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.service.UserService;
+import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.model.dto.UserDto;
+import ru.practicum.shareit.user.service.UserServiceImpl;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -16,12 +16,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserService userService;
+    private final UserServiceImpl userDao;
 
     @GetMapping
     public List<UserDto> getAllUsers() {
         log.info("Пришёл GET запрос /users");
-        List<UserDto> response = userService.getAllUsers();
+        List<UserDto> response = userDao.getAllUsers();
         log.info("Отправлен ответ getAllUsers /users с телом {}", response);
         return response;
     }
@@ -29,7 +29,7 @@ public class UserController {
     @GetMapping("/{id}")
     public UserDto getUserById(@PathVariable Integer id) {
         log.info("Пришёл GET запрос /users/{}", id);
-        UserDto response = userService.getUserById(id);
+        UserDto response = userDao.getUserById(id);
         log.info("Отправлен ответ getUserById /users/{} с телом {}", id, response);
         return response;
     }
@@ -37,7 +37,7 @@ public class UserController {
     @PostMapping
     public UserDto createUser(@Valid @RequestBody User user) {
         log.info("Пришёл POST запрос /users с телом {}", user);
-        UserDto response = userService.createUser(user);
+        UserDto response = userDao.createUser(user);
         log.info("Отправлен ответ createUser /users с телом {}", response);
         return response;
     }
@@ -45,7 +45,7 @@ public class UserController {
     @PatchMapping("/{id}")
     public UserDto updateUser(@PathVariable Integer id, @RequestBody User user) {
         log.info("Пришёл PATCH запрос /users/{} с телом {}", id, user);
-        UserDto response = userService.updateUser(id, user);
+        UserDto response = userDao.updateUser(id, user);
         log.info("Отправлен ответ updateUser /users/{} с телом {}", id, response);
         return response;
     }
@@ -53,6 +53,6 @@ public class UserController {
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Integer id) {
         log.info("Пришёл DELETE запрос /users/{}", id);
-        userService.deleteUser(id);
+        userDao.deleteUser(id);
     }
 }

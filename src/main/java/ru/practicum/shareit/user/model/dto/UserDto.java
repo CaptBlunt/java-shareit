@@ -1,4 +1,4 @@
-package ru.practicum.shareit.user.dto;
+package ru.practicum.shareit.user.model.dto;
 
 import lombok.Data;
 
@@ -10,4 +10,10 @@ public class UserDto {
     private String email;
 
     private String name;
+
+    @Data
+    public static class BookerDto {
+        private Integer id;
+    }
 }
+
