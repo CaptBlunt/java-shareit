@@ -26,6 +26,7 @@ public interface ItemServiceDao {
 
     @Transactional
     ItemDto updateItem(Integer id, Item item, Integer userId);
+
     @Transactional
     CommentDto addComment(Integer itemId, CommentDto.CommentDtoPost comment, Integer userId);
 }

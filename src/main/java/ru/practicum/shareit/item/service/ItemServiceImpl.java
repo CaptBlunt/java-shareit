@@ -94,7 +94,7 @@ public class ItemServiceImpl implements ItemServiceDao {
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
         if (!userId.equals(itemUpd.getOwnerId())) {
-            throw new NotFoundException("Пользователь "+ userId + " не является владельцем  вещи " + id);
+            throw new NotFoundException("Пользователь " + userId + " не является владельцем  вещи " + id);
         }
         String newName = item.getName();
         String newDesc = item.getDescription();
