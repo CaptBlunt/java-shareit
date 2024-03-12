@@ -32,7 +32,7 @@ public class UserMapper {
         return user;
     }
 
-    public List<UserResponse> UsersResponseFromUsers(List<User> users) {
+    public List<UserResponse> usersResponseFromUsers(List<User> users) {
         return users.stream()
                 .map(this::userResponseFromUser)
                 .collect(Collectors.toList());

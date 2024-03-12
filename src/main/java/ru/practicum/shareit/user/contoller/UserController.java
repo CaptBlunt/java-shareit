@@ -23,7 +23,7 @@ public class UserController {
     @GetMapping
     public List<UserResponse> getAllUsers() {
         log.info("Пришёл GET запрос /users");
-        List<UserResponse> response = userMapper.UsersResponseFromUsers(userService.getAllUsers());
+        List<UserResponse> response = userMapper.usersResponseFromUsers(userService.getAllUsers());
         log.info("Отправлен ответ getAllUsers /users с телом {}", response);
         return response;
     }
