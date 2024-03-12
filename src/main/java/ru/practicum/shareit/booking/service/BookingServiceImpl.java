@@ -3,17 +3,15 @@ package ru.practicum.shareit.booking.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.BookingStatus;
-import ru.practicum.shareit.booking.model.dto.BookingDto;
-import ru.practicum.shareit.booking.model.dto.BookingMapper;
-import ru.practicum.shareit.booking.dao.BookingRepository;
-import ru.practicum.shareit.booking.dao.BookingServiceDao;
-import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.booking.dto.BookingMapper;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.exception.AccessibilityErrorException;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.storage.ItemRepository;
-import ru.practicum.shareit.user.storage.UserRepository;
+import ru.practicum.shareit.item.service.ItemRepository;
+import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.service.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -22,7 +20,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class BookingServiceImpl implements BookingServiceDao {
+public class BookingServiceImpl implements BookingService {
 
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
@@ -31,40 +29,35 @@ public class BookingServiceImpl implements BookingServiceDao {
     private final BookingMapper bookingMapper;
 
     @Override
-    public BookingDto createBooking(BookingDto.BookingDtoReq bookingDtoReq, Integer userId) {
-        userRepository.findById(userId)
+    public Booking createBooking(Booking newBooking) {
+        User user = userRepository.findById(newBooking.getBooker().getId())
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
-        Item item = itemRepository.findById(bookingDtoReq.getItemId())
+        Item item = itemRepository.findById(newBooking.getItem().getId())
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
         if (item.getAvailable().equals(false)) {
             throw new AccessibilityErrorException("Вещь не доступна");
         }
-        LocalDateTime start = bookingDtoReq.getStart();
-        LocalDateTime end = bookingDtoReq.getEnd();
+        LocalDateTime start = newBooking.getStart();
+        LocalDateTime end = newBooking.getEnd();
 
         if (start == null || end == null || end.isBefore(LocalDateTime.now()) || end.isBefore(start) || start.equals(end) || start.isBefore(LocalDateTime.now())) {
             throw new AccessibilityErrorException("Не верные даты");
         }
 
-        if (userId.equals(item.getOwnerId())) {
+        if (newBooking.getBooker().getId().equals(item.getOwnerId())) {
             throw new NotFoundException("Нельзя забронировать свою вещь");
         }
-        Booking booking1 = bookingMapper.bookingFromDto(bookingDtoReq);
+        Booking bookingSave = bookingRepository.save(bookingMapper.bookingForCreate(newBooking, user, item));
 
-        booking1.setStatus(BookingStatus.WAITING);
-        booking1.setBooker(userId);
-        booking1.setItem(bookingDtoReq.getItemId());
-        bookingRepository.save(booking1);
-
-        return bookingMapper.dtoFromBooking(bookingRepository.getReferenceById(booking1.getId()));
+        return bookingRepository.getReferenceById(bookingSave.getId());
     }
 
     @Override
-    public BookingDto approveOrReject(Integer bookingId, Integer userId, String solution) {
+    public Booking approveOrReject(Integer bookingId, Integer userId, String solution) {
         Booking booking = bookingRepository.getReferenceById(bookingId);
-        Item item = itemRepository.getReferenceById(booking.getItem());
+        Item item = itemRepository.getReferenceById(booking.getItem().getId());
         if (!item.getOwnerId().equals(userId)) {
             throw new NotFoundException("Пользователь не является владельцем вещи");
         }
@@ -76,32 +69,24 @@ public class BookingServiceImpl implements BookingServiceDao {
         } else {
             booking.setStatus(BookingStatus.REJECTED);
         }
-        bookingRepository.save(booking);
+        Booking bookingUpd = bookingRepository.save(booking);
 
-        return bookingMapper.dtoFromBooking(bookingRepository.getReferenceById(booking.getId()));
+        return bookingRepository.getReferenceById(bookingUpd.getId());
     }
 
     @Override
-    public BookingDto getBooking(Integer bookingId, Integer userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
-
+    public Booking getBooking(Integer bookingId, Integer userId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
 
-        Item item = itemRepository.findById(booking.getItem())
-                .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
-
-        if (!booking.getBooker().equals(userId) && !item.getOwnerId().equals(userId)) {
+        if (!booking.getBooker().getId().equals(userId) && !booking.getItem().getOwnerId().equals(userId)) {
             throw new NotFoundException("Пользователь не является владельцем вещи");
         }
-        return bookingMapper.dtoFromBooking(bookingRepository.getReferenceById(booking.getId()));
+        return booking;
     }
 
     @Override
-    public List<BookingDto> getBookingsByUserId(Integer userId, String state, boolean isOwner) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+    public List<Booking> getBookingsByUserId(Integer userId, String state, boolean isOwner) {
         List<Booking> bookings = new ArrayList<>();
         BookingStatus status = BookingStatus.from(state);
         if (status == null) {
@@ -148,6 +133,6 @@ public class BookingServiceImpl implements BookingServiceDao {
         if (bookings.isEmpty()) {
             throw new NotFoundException("Бронирований не найдено");
         }
-        return bookingMapper.listDtoFromBookings(bookings);
+        return bookings;
     }
 }

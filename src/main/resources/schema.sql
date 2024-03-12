@@ -10,7 +10,8 @@ UNIQUE (email)
 CREATE TABLE IF NOT EXISTS requests (
 id            INT GENERATED     BY DEFAULT AS IDENTITY PRIMARY KEY,
 description   VARCHAR(200)      NOT NULL,
-requestor_id  INT               REFERENCES users(id)
+requestor_id  INT               REFERENCES users(id),
+created_date  TIMESTAMP         NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS items (

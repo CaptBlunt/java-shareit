@@ -1,4 +1,4 @@
-package ru.practicum.shareit.booking.dao;
+package ru.practicum.shareit.booking.service;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -69,6 +69,10 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             "where booking.booker_id = ?1 and booking.status = ?2", nativeQuery = true)
     List<Booking> findByBookerAndStatus(Integer userId, String status);
 
+
+    @Query(value = "select * from bookings as booking " +
+            "where booking.booker_id = ?1 " +
+            "order by booking.start_date desc", nativeQuery = true)
     List<Booking> findByBookerOrderByStartDesc(Integer userId);
 
     @Query(value = "select * from bookings as booking " +

@@ -1,7 +1,8 @@
 package ru.practicum.shareit.item.model;
 
 import lombok.Data;
-import ru.practicum.shareit.comments.model.dto.CommentDto;
+import ru.practicum.shareit.comments.dto.CommentResponse;
+import ru.practicum.shareit.item.dto.ItemResponse;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -34,7 +35,13 @@ public class Item {
     private Boolean available;
 
     @Transient
-    private List<CommentDto> comments = new ArrayList<>();
+    private ItemResponse.ItemForOwner lastBooking;
+
+    @Transient
+    private ItemResponse.ItemForOwner nextBooking;
+
+    @Transient
+    private List<CommentResponse> comments = new ArrayList<>();
 
     @Column(name = "request_id")
     private Integer requestId;

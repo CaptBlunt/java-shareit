@@ -1,4 +1,4 @@
-package ru.practicum.shareit.comments.storage;
+package ru.practicum.shareit.user.service;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

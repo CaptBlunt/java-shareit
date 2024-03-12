@@ -1,9 +1,9 @@
-package ru.practicum.shareit.user.model.dto;
+package ru.practicum.shareit.user.dto;
 
 import lombok.Data;
 
 @Data
-public class UserDto {
+public class UserResponse {
 
     private Integer id;
 

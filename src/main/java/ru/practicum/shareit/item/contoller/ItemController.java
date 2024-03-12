@@ -3,61 +3,65 @@ package ru.practicum.shareit.item.contoller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.comments.model.dto.CommentDto;
+import ru.practicum.shareit.comments.dto.CommentRequest;
+import ru.practicum.shareit.comments.dto.CommentMapper;
+import ru.practicum.shareit.comments.dto.CommentResponse;
+import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.dto.ItemRequest;
+import ru.practicum.shareit.item.dto.ItemResponse;
+import ru.practicum.shareit.item.dto.ItemUpdateRequest;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.model.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemServiceImpl;
 
 import java.util.List;
 
-/**
- * TODO Sprint add-controllers.
- */
 @Slf4j
 @RestController
 @RequestMapping("/items")
 @RequiredArgsConstructor
 public class ItemController {
-    private final ItemServiceImpl itemDao;
+    private final ItemServiceImpl itemService;
+    private final ItemMapper itemMapper;
+    private final CommentMapper commentMapper;
 
     @GetMapping("/{id}")
-    public ItemDto getItemById(@PathVariable Integer id, @RequestHeader(value = "X-Sharer-User-Id") Integer userId) {
+    public ItemResponse getItemById(@PathVariable Integer id, @RequestHeader(value = "X-Sharer-User-Id") Integer userId) {
         log.info("Пришёл GET запрос /items/{} от пользователя id {}", id, userId);
-        ItemDto response = itemDao.getItemById(id, userId);
+        ItemResponse response = itemMapper.itemResponseFromItem(itemService.getItemById(id, userId));
         log.info("Отправлен ответ getItemById /items/{} с телом {}", id, response);
         return response;
     }
 
     @GetMapping
-    public List<ItemDto> getAllItemsByUserId(@RequestHeader(value = "X-Sharer-User-Id") Integer userId) {
+    public List<ItemResponse> getAllItemsByUserId(@RequestHeader(value = "X-Sharer-User-Id") Integer userId) {
         log.info("Пришёл GET запрос /items от пользователя id {}", userId);
-        List<ItemDto> response = itemDao.findByOwnerId(userId);
+        List<ItemResponse> response = itemMapper.itemsForResponse(itemService.findByOwnerId(userId));
         log.info("Отправлен ответ getAllItemsByUserId /items с телом {}", response);
         return response;
     }
 
     @PostMapping
-    public ItemDto createItem(@RequestBody Item item, @RequestHeader(value = "X-Sharer-User-Id") Integer userId) {
+    public ItemResponse createItem(@RequestBody ItemRequest item, @RequestHeader(value = "X-Sharer-User-Id") Integer userId) {
         log.info("Пришёл POST запрос /items от пользователя id {} с телом {}", userId, item);
-        ItemDto response = itemDao.createItem(item, userId);
+        Item response = itemService.createItem(itemMapper.itemFromItemRequest(item, userId));
         log.info("Отправлен ответ createItem /items с телом {}", response);
-        return response;
+        return itemMapper.itemForCreate(response);
     }
 
     @PatchMapping("/{id}")
-    public ItemDto updateItem(@PathVariable Integer id, @RequestBody Item item,
-                              @RequestHeader(value = "X-Sharer-User-Id") Integer userId) {
+    public ItemResponse updateItem(@PathVariable Integer id, @RequestBody ItemUpdateRequest item,
+                                   @RequestHeader(value = "X-Sharer-User-Id") Integer userId) {
         log.info("Пришёл PATCH запрос /items/{} от пользователя id {} с телом {}", id, userId, item);
-        ItemDto response = itemDao.updateItem(id, item, userId);
+        ItemResponse response = itemMapper.itemResponseFromItem(itemService.updateItem(itemMapper.itemFromUpdate(item, userId, id)));
         log.info("Отправлен ответ updateItem /items/{} с телом {}", id, response);
         return response;
     }
 
     @GetMapping("/search")
-    public List<ItemDto> searchBySubstring(@RequestParam String text,
-                                           @RequestHeader(value = "X-Sharer-User-Id") Integer userId) {
+    public List<ItemResponse> searchBySubstring(@RequestParam String text,
+                                                @RequestHeader(value = "X-Sharer-User-Id") Integer userId) {
         log.info("Пришёл GET запрос /items/search от пользователя {} с параметром {}", userId, text);
-        List<ItemDto> response = itemDao.searchBySubstring(text, text);
+        List<ItemResponse> response = itemMapper.itemsForResponse(itemService.searchBySubstring(text, text));
         log.info("Отправлен ответ searchBySubstring /items/search с телом {}", response);
         return response;
     }
@@ -65,14 +69,14 @@ public class ItemController {
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Integer id) {
         log.info("Пришёл DELETE запрос /items/{}", id);
-        itemDao.deleteItem(id);
+        itemService.deleteItem(id);
     }
 
     @PostMapping("/{id}/comment")
-    public CommentDto createComment(@RequestBody CommentDto.CommentDtoPost comment, @PathVariable Integer id,
-                                 @RequestHeader(value = "X-Sharer-User-Id") Integer userId) {
+    public CommentResponse createComment(@RequestBody CommentRequest comment, @PathVariable Integer id,
+                                         @RequestHeader(value = "X-Sharer-User-Id") Integer userId) {
         log.info("Пришёл POST запрос /items/{}/comment от пользователя {} с телом {}", id, userId, comment);
-        CommentDto response = itemDao.addComment(id, comment, userId);
+        CommentResponse response = commentMapper.commentResponse(itemService.addComment(id, commentMapper.commentForCreate(comment), userId));
         log.info("Отправлен ответ addComment /items/{}/comment с телом {}", id, response);
         return response;
     }

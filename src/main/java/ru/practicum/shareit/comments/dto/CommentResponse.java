@@ -1,11 +1,11 @@
-package ru.practicum.shareit.comments.model.dto;
+package ru.practicum.shareit.comments.dto;
 
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Data
-public class CommentDto {
+public class CommentResponse {
 
     private Integer id;
 
@@ -15,8 +15,4 @@ public class CommentDto {
 
     private LocalDateTime created;
 
-    @Data
-    public static class CommentDtoPost {
-        private String text;
-    }
 }

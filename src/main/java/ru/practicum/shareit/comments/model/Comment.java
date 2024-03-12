@@ -1,6 +1,8 @@
 package ru.practicum.shareit.comments.model;
 
 import lombok.Data;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -16,11 +18,13 @@ public class Comment {
 
     private String text;
 
-    @Column(name = "item_id")
-    private Integer item;
+    @ManyToOne
+    @JoinColumn(name = "item_id")
+    private Item item;
 
-    @Column(name = "author_id")
-    private Integer authorName;
+    @ManyToOne
+    @JoinColumn(name = "author_id")
+    private User authorName;
 
     @Column(name = "created_date")
     private LocalDateTime created;
