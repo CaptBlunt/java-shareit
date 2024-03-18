@@ -22,6 +22,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class RequestServiceImpl implements RequestService {
+
     private final UserRepository userRepository;
     private final RequestRepository requestRepository;
     private final ItemRepository itemRepository;
@@ -128,5 +129,4 @@ public class RequestServiceImpl implements RequestService {
         }
         return requestMapper.requestForUser(getRequestById(requestId), itemForRequest);
     }
-
 }
