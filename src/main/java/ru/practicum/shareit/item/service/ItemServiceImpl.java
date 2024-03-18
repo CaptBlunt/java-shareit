@@ -2,20 +2,21 @@ package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.booking.service.BookingRepository;
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.service.BookingRepository;
 import ru.practicum.shareit.comments.dto.CommentMapper;
 import ru.practicum.shareit.comments.dto.CommentResponse;
 import ru.practicum.shareit.comments.model.Comment;
-import ru.practicum.shareit.user.service.CommentRepository;
 import ru.practicum.shareit.exception.AccessibilityErrorException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidateException;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.service.CommentRepository;
 import ru.practicum.shareit.user.service.UserRepository;
 
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@Transactional(readOnly = true)
+@Transactional
 @RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
@@ -36,14 +37,19 @@ public class ItemServiceImpl implements ItemService {
     private final ItemMapper itemMapper;
     private final CommentMapper commentMapper;
 
+
+    public PageRequest pagination(Integer from, Integer size) {
+        return PageRequest.of(from / size, size);
+    }
+
     @Override
     @Transactional
     public Item createItem(Item item) {
         validateItem(item);
-        userRepository.findById(item.getOwnerId())
+        userRepository.findById(item.getOwner().getId())
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
-        Item itemSave = itemRepository.save(item);
-        return itemRepository.getReferenceById(itemSave.getId());
+
+        return itemRepository.save(item);
     }
 
     @Override
@@ -63,13 +69,13 @@ public class ItemServiceImpl implements ItemService {
             CommentResponse dto = commentMapper.commentResponseFromComment(comment, user.getName());
             commentResponses.add(dto);
         }
-        if (!item.getOwnerId().equals(userId)) {
+        if (!item.getOwner().getId().equals(userId)) {
             return itemMapper.itemFromItemResponse(itemMapper.itemResponseFromItemForUser(item, commentResponses));
 
         } else {
             List<Booking> bookings = bookingRepository.findByItemId(item.getId());
-            List<Booking> pastBookings = bookingRepository.findByOwnerIdAndItemIdPastBookings(item.getOwnerId(), item.getId());
-            List<Booking> futureBookings = bookingRepository.findByOwnerIdAndItemIdFutureBookings(item.getOwnerId(), item.getId());
+            List<Booking> pastBookings = bookingRepository.findByOwnerIdAndItemIdPastBookings(item.getOwner().getId(), item.getId());
+            List<Booking> futureBookings = bookingRepository.findByOwnerIdAndItemIdFutureBookings(item.getOwner().getId(), item.getId());
 
             return itemMapper.itemFromItemResponse(itemMapper.itemForOwner(item, commentResponses, bookings, pastBookings, futureBookings));
         }
@@ -77,8 +83,20 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Item> findByOwnerId(Integer userId) {
-        List<Item> items = itemRepository.findByOwnerId(userId);
+    public List<Item> findByOwnerId(Integer userId, Integer from, Integer size) {
+        if (from == null) {
+            from = 0;
+        }
+        if (size == null) {
+            size = itemRepository.findAll().size();
+        }
+
+        if ((from < 0 || size < 0) || (size == 0)) {
+            throw new ValidateException("Проверьте указанные параметры");
+        }
+
+        PageRequest pageable = pagination(from, size);
+        List<Item> items = itemRepository.findByOwnerId(userId, pageable);
         return items.stream()
                 .map(item -> {
                     List<Comment> comments = commentRepository.findByItemIdAndOwnerId(item.getId());
@@ -86,11 +104,9 @@ public class ItemServiceImpl implements ItemService {
                         comments = new ArrayList<>();
                     }
 
-                    userRepository.getReferenceById(item.getOwnerId());
-
                     List<Booking> bookings = bookingRepository.findByItemId(item.getId());
-                    List<Booking> pastBookings = bookingRepository.findByOwnerIdAndItemIdPastBookings(item.getOwnerId(), item.getId());
-                    List<Booking> futureBookings = bookingRepository.findByOwnerIdAndItemIdFutureBookings(item.getOwnerId(), item.getId());
+                    List<Booking> pastBookings = bookingRepository.findByOwnerIdAndItemIdPastBookings(item.getOwner().getId(), item.getId());
+                    List<Booking> futureBookings = bookingRepository.findByOwnerIdAndItemIdFutureBookings(item.getOwner().getId(), item.getId());
 
                     List<CommentResponse> commentResponses = new ArrayList<>();
 
@@ -108,11 +124,24 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Item> searchBySubstring(String str, String str1) {
+    public List<Item> searchBySubstring(String str, String str1, Integer from, Integer size) {
         if (str.isEmpty()) {
             return new ArrayList<>();
         }
-        List<Item> items = itemRepository.findByNameContainingOrDescriptionContainingIgnoreCase(str, str1);
+
+        if (from == null || from == 0) {
+            from = 0;
+        }
+        if (size == null) {
+            size = itemRepository.findAll().size();
+        }
+
+        if ((from < 0 || size < 0) || (size == 0)) {
+            throw new ValidateException("Проверьте указанные параметры");
+        }
+        PageRequest pageable = pagination(from, size);
+
+        List<Item> items = itemRepository.findByNameContainingOrDescriptionContainingIgnoreCase(str, str1, pageable);
 
         List<Item> itemsResponse = new ArrayList<>();
 
@@ -122,7 +151,7 @@ public class ItemServiceImpl implements ItemService {
                 if (comments.isEmpty()) {
                     comments = new ArrayList<>();
                 }
-                userRepository.getReferenceById(item.getOwnerId());
+                userRepository.getReferenceById(item.getOwner().getId());
 
                 List<CommentResponse> dtos = new ArrayList<>();
 
@@ -149,12 +178,13 @@ public class ItemServiceImpl implements ItemService {
         Item itemUpd = itemRepository.findById(item.getId())
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
-        userRepository.findById(item.getOwnerId())
+        userRepository.findById(item.getOwner().getId())
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
-        if (!item.getOwnerId().equals(itemUpd.getOwnerId())) {
-            throw new NotFoundException("Пользователь " + item.getOwnerId() + " не является владельцем  вещи " + itemUpd.getId());
+        if (!item.getOwner().getId().equals(itemUpd.getOwner().getId())) {
+            throw new NotFoundException("Пользователь " + item.getOwner().getId() + " не является владельцем  вещи " + itemUpd.getId());
         }
+
         if (item.getName() == null) {
             item.setName(itemUpd.getName());
         }
@@ -164,6 +194,8 @@ public class ItemServiceImpl implements ItemService {
         if (item.getAvailable() == null) {
             item.setAvailable(itemUpd.getAvailable());
         }
+
+        validateItem(item);
 
         itemUpd.setName(item.getName());
         itemUpd.setDescription(item.getDescription());
@@ -213,6 +245,7 @@ public class ItemServiceImpl implements ItemService {
         Comment newComment = commentMapper.commentFromCommentRequest(commentMapper.commentRequestFromComment(comment), user, itemForComment);
         Comment commentSave = commentRepository.save(newComment);
 
+        //return commentRepository.save(newComment);
         return commentRepository.getReferenceById(commentSave.getId());
     }
 

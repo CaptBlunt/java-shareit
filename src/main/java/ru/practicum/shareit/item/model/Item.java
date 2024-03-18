@@ -1,8 +1,11 @@
 package ru.practicum.shareit.item.model;
 
-import lombok.Data;
+import lombok.*;
+import net.bytebuddy.utility.nullability.MaybeNull;
 import ru.practicum.shareit.comments.dto.CommentResponse;
 import ru.practicum.shareit.item.dto.ItemResponse;
+import ru.practicum.shareit.request.model.Request;
+import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -11,7 +14,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
+@Builder
+@EqualsAndHashCode(of = "id")
 @Entity
+@AllArgsConstructor
+@RequiredArgsConstructor
 @Table(name = "items")
 public class Item {
 
@@ -29,8 +36,9 @@ public class Item {
     @Column(nullable = false, length = 200)
     private String description;
 
-    @Column(name = "owner_id")
-    private Integer ownerId;
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private User owner;
 
     private Boolean available;
 
@@ -43,6 +51,8 @@ public class Item {
     @Transient
     private List<CommentResponse> comments = new ArrayList<>();
 
-    @Column(name = "request_id")
-    private Integer requestId;
+    @OneToOne
+    @MaybeNull
+    @JoinColumn(name = "request_id")
+    private Request request;
 }

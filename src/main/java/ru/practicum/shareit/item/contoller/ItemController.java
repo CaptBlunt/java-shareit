@@ -3,8 +3,8 @@ package ru.practicum.shareit.item.contoller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.comments.dto.CommentRequest;
 import ru.practicum.shareit.comments.dto.CommentMapper;
+import ru.practicum.shareit.comments.dto.CommentRequest;
 import ru.practicum.shareit.comments.dto.CommentResponse;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.dto.ItemRequest;
@@ -33,9 +33,10 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemResponse> getAllItemsByUserId(@RequestHeader(value = "X-Sharer-User-Id") Integer userId) {
+    public List<ItemResponse> getAllItemsByUserId(@RequestHeader(value = "X-Sharer-User-Id") Integer userId,
+                                                  @RequestParam(required = false) Integer from, @RequestParam(required = false) Integer size) {
         log.info("Пришёл GET запрос /items от пользователя id {}", userId);
-        List<ItemResponse> response = itemMapper.itemsForResponse(itemService.findByOwnerId(userId));
+        List<ItemResponse> response = itemMapper.itemsForResponse(itemService.findByOwnerId(userId, from, size));
         log.info("Отправлен ответ getAllItemsByUserId /items с телом {}", response);
         return response;
     }
@@ -59,15 +60,16 @@ public class ItemController {
 
     @GetMapping("/search")
     public List<ItemResponse> searchBySubstring(@RequestParam String text,
-                                                @RequestHeader(value = "X-Sharer-User-Id") Integer userId) {
+                                                @RequestHeader(value = "X-Sharer-User-Id") Integer userId,
+                                                @RequestParam(required = false) Integer from, @RequestParam(required = false) Integer size) {
         log.info("Пришёл GET запрос /items/search от пользователя {} с параметром {}", userId, text);
-        List<ItemResponse> response = itemMapper.itemsForResponse(itemService.searchBySubstring(text, text));
+        List<ItemResponse> response = itemMapper.itemsForResponse(itemService.searchBySubstring(text, text, from, size));
         log.info("Отправлен ответ searchBySubstring /items/search с телом {}", response);
         return response;
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable Integer id) {
+    public void deleteItem(@PathVariable Integer id) {
         log.info("Пришёл DELETE запрос /items/{}", id);
         itemService.deleteItem(id);
     }

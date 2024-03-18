@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.comments.dto.CommentResponse;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.model.Request;
+import ru.practicum.shareit.user.model.User;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +38,9 @@ public class ItemMapper {
         response.setLastBooking(item.getLastBooking());
         response.setNextBooking(item.getNextBooking());
         response.setComments(item.getComments());
+        if (item.getRequest() != null) {
+            response.setRequestId(item.getRequest().getId());
+        }
         return response;
     }
 
@@ -56,7 +61,14 @@ public class ItemMapper {
         item.setName(itemRequest.getName());
         item.setDescription(itemRequest.getDescription());
         item.setAvailable(itemRequest.getAvailable());
-        item.setOwnerId(userId);
+        User user = new User();
+        user.setId(userId);
+        item.setOwner(user);
+        if (!(itemRequest.getRequestId() == null)) {
+            Request request = new Request();
+            request.setId(itemRequest.getRequestId());
+            item.setRequest(request);
+        }
         return item;
     }
 
@@ -69,6 +81,9 @@ public class ItemMapper {
         dto.setLastBooking(null);
         dto.setNextBooking(null);
         dto.setComments(new ArrayList<>());
+        if (item.getRequest() != null) {
+            dto.setRequestId(item.getRequest().getId());
+        }
         return dto;
     }
 
@@ -116,11 +131,23 @@ public class ItemMapper {
     public Item itemFromUpdate(ItemUpdateRequest itemUpdate, Integer userId, Integer id) {
         Item item = new Item();
         item.setId(id);
-        item.setOwnerId(userId);
+        User user = new User();
+        user.setId(userId);
+        item.setOwner(user);
         item.setName(itemUpdate.getName());
         item.setDescription(itemUpdate.getDescription());
         item.setAvailable(itemUpdate.getAvailable());
 
         return item;
+    }
+
+    public ItemForRequest itemForRequestFromItem(Item item) {
+        ItemForRequest itemForRequest = new ItemForRequest();
+        itemForRequest.setId(item.getId());
+        itemForRequest.setName(item.getName());
+        itemForRequest.setDescription(item.getDescription());
+        itemForRequest.setAvailable(item.getAvailable());
+        itemForRequest.setRequestId(item.getRequest() != null ? item.getRequest().getId() : null);
+        return itemForRequest;
     }
 }

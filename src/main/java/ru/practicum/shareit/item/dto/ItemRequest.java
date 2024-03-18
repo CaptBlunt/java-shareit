@@ -1,11 +1,15 @@
 package ru.practicum.shareit.item.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 @Data
+@AllArgsConstructor
+@RequiredArgsConstructor
 public class ItemRequest {
 
     @NotBlank(message = "Поле названия не может быть пустым")
@@ -17,4 +21,6 @@ public class ItemRequest {
     private String description;
 
     private Boolean available;
+
+    private Integer requestId;
 }

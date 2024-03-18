@@ -20,7 +20,7 @@ name          VARCHAR(20)       NOT NULL,
 description   VARCHAR(200)      NOT NULL,
 available     BOOLEAN           NOT NULL,
 owner_id      INT               REFERENCES users(id),
-request_id    INT               REFERENCES requests(id)
+request_id    INT               REFERENCES requests(id) NULL
 );
 
 

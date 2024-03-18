@@ -19,16 +19,14 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     @Override
-    @Transactional
     public User createUser(User user) {
         String newName = user.getName();
         String newEmail = user.getEmail();
         if (!isNotEmpty(newName) || !isNotEmpty(newEmail)) {
             throw new ValidateException("Ошибка валидации. Поле " +
-                    (newName.isEmpty() ? "Email" : "Имя") + " не может быть пустым!");
+                    (newName.isEmpty() ? "Имя" : "Email") + " не может быть пустым!");
         }
-        User userSave = userRepository.save(user);
-        return userRepository.getReferenceById(userSave.getId());
+        return userRepository.save(user);
     }
 
     @Override
@@ -47,19 +45,13 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public User updateUser(Integer id, User user) {
-        User userUpd = userRepository.getReferenceById(id);
-
-        String newName = user.getName();
-        String newEmail = user.getEmail();
-
-        if (newName == null) {
-            user.setName(userUpd.getName());
+        User userUpd = getUserById(id);
+        if (user.getEmail() != null) {
+            userUpd.setEmail(user.getEmail());
         }
-        if (newEmail == null) {
-            user.setEmail(userUpd.getEmail());
+        if (user.getName() != null) {
+            userUpd.setName(user.getName());
         }
-        userUpd.setName(user.getName());
-        userUpd.setEmail(user.getEmail());
         return userRepository.save(userUpd);
     }
 

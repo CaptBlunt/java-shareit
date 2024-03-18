@@ -1,6 +1,6 @@
 package ru.practicum.shareit.user.model;
 
-import lombok.Data;
+import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
@@ -8,7 +8,11 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 @Data
+@Builder
+@EqualsAndHashCode(of = "id")
 @Entity
+@AllArgsConstructor
+@RequiredArgsConstructor
 @Table(name = "users")
 public class User {
 

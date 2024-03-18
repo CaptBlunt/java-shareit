@@ -11,5 +11,5 @@ public interface BookingService {
 
     Booking getBooking(Integer bookingId, Integer userId);
 
-    List<Booking> getBookingsByUserId(Integer userId, String state, boolean isOwner);
+    List<Booking> getBookingsByUserId(Integer userId, String state, boolean isOwner, Integer from, Integer size);
 }

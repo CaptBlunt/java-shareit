@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.dto.BookingRequest;
@@ -49,18 +50,20 @@ public class BookingController {
 
     @GetMapping
     public List<BookingResponse> getBookingsByUserId(@RequestHeader(value = "X-Sharer-User-Id") Integer userId,
-                                                     @RequestParam(required = false, defaultValue = "ALL") String state) {
+                                                     @RequestParam(required = false, defaultValue = "ALL") String state,
+                                                     @RequestParam(required = false) @Validated Integer from, @RequestParam(required = false) @Validated Integer size) {
         log.info("Пришёл GET запрос /bookings от пользователя id {}", userId);
-        List<BookingResponse> response = bookingMapper.listBookingResponseFromBookings(bookingService.getBookingsByUserId(userId, state, false));
+        List<BookingResponse> response = bookingMapper.listBookingResponseFromBookings(bookingService.getBookingsByUserId(userId, state, false, from, size));
         log.info("Отправлен ответ getBookingsByUserId /bookings с телом {}", response);
         return response;
     }
 
     @GetMapping("/owner")
     public List<BookingResponse> getBookingsForItemsByUserId(@RequestHeader(value = "X-Sharer-User-Id") Integer userId,
-                                                             @RequestParam(required = false, defaultValue = "ALL") String state) {
+                                                             @RequestParam(required = false, defaultValue = "ALL") String state,
+                                                             @RequestParam(required = false) Integer from, @RequestParam(required = false) Integer size) {
         log.info("Пришёл GET запрос /bookings/owner от пользователя id {}", userId);
-        List<BookingResponse> response = bookingMapper.listBookingResponseFromBookings(bookingService.getBookingsByUserId(userId, state, true));
+        List<BookingResponse> response = bookingMapper.listBookingResponseFromBookings(bookingService.getBookingsByUserId(userId, state, true, from, size));
         log.info("Отправлен ответ getBookingsForItemsByUserId /bookings/owner с телом {}", response);
         return response;
     }

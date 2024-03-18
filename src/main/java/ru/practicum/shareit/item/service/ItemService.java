@@ -15,10 +15,10 @@ public interface ItemService {
     Item getItemById(Integer id, Integer userId);
 
     @Transactional(readOnly = true)
-    List<Item> findByOwnerId(Integer userId);
+    List<Item> findByOwnerId(Integer userId, Integer from, Integer size);
 
     @Transactional(readOnly = true)
-    List<Item> searchBySubstring(String str, String str1);
+    List<Item> searchBySubstring(String str, String str1, Integer from, Integer size);
 
     @Transactional
     void deleteItem(Integer id);

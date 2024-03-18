@@ -1,5 +1,6 @@
 package ru.practicum.shareit.booking.service;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import ru.practicum.shareit.booking.model.Booking;
@@ -12,13 +13,13 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             "left join items as it on it.id = booking.item_id " +
             "where it.owner_id = ?1 " +
             "order by booking.start_date desc", nativeQuery = true)
-    List<Booking> findByOwnerId(Integer userId);
+    List<Booking> findByOwnerId(Integer userId, PageRequest pageable);
 
     @Query(value = "select * from bookings as booking " +
             "right join items as it on it.id = booking.item_id " +
             "where it.owner_id = ?1 and booking.end_date < current_timestamp " +
             "order by booking.start_date desc", nativeQuery = true)
-    List<Booking> findByOwnerIdPastBookings(Integer userId);
+    List<Booking> findByOwnerIdPastBookings(Integer userId, PageRequest pageable);
 
     @Query(value = "select * from bookings as booking " +
             "right join items as it on it.id = booking.item_id " +
@@ -30,13 +31,13 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             "left join items as it on it.id = booking.item_id " +
             "where it.owner_id = ?1 and booking.status = ?2 " +
             "order by booking.start_date desc", nativeQuery = true)
-    List<Booking> findByOwnerIdAndStatus(Integer userId, String status);
+    List<Booking> findByOwnerIdAndStatus(Integer userId, String status, PageRequest pageable);
 
     @Query(value = "select * from bookings as booking " +
             "right join items as it on it.id = booking.item_id " +
             "where it.owner_id = ?1 and booking.start_date > current_timestamp " +
             "order by booking.start_date desc", nativeQuery = true)
-    List<Booking> findByOwnerIdFutureBookings(Integer userId);
+    List<Booking> findByOwnerIdFutureBookings(Integer userId, PageRequest pageable);
 
     @Query(value = "select * from bookings as booking " +
             "right join items as it on it.id = booking.item_id " +
@@ -63,30 +64,33 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             "left join items as it on it.id = booking.item_id " +
             "where it.owner_id = ?1 and current_timestamp between booking.start_date and booking.end_date " +
             "order by booking.start_date desc", nativeQuery = true)
-    List<Booking> findByOwnerIdCurrentBookings(Integer userId);
+    List<Booking> findByOwnerIdCurrentBookings(Integer userId, PageRequest pageable);
 
     @Query(value = "select * from bookings as booking " +
             "where booking.booker_id = ?1 and booking.status = ?2", nativeQuery = true)
-    List<Booking> findByBookerAndStatus(Integer userId, String status);
+    List<Booking> findByBookerAndStatus(Integer userId, String status, PageRequest pageable);
 
 
     @Query(value = "select * from bookings as booking " +
             "where booking.booker_id = ?1 " +
             "order by booking.start_date desc", nativeQuery = true)
-    List<Booking> findByBookerOrderByStartDesc(Integer userId);
+    List<Booking> findByBookerOrderByStartDesc(Integer userId, PageRequest pageable);
 
     @Query(value = "select * from bookings as booking " +
-            "where booking.end_date < current_timestamp " +
+            "where booking.booker_id = ?1 and " +
+            "booking.end_date < current_timestamp " +
             "order by booking.start_date desc", nativeQuery = true)
-    List<Booking> findByBookerIdPastBookings(Integer userId);
+    List<Booking> findByBookerIdPastBookings(Integer userId, PageRequest pageable);
 
     @Query(value = "select * from bookings as booking " +
-            "where booking.start_date > current_timestamp " +
+            "where booking.booker_id = ?1 and " +
+            "booking.start_date > current_timestamp " +
             "order by booking.start_date desc", nativeQuery = true)
-    List<Booking> findByBookerIdFutureBookings(Integer userId);
+    List<Booking> findByBookerIdFutureBookings(Integer userId, PageRequest pageable);
 
     @Query(value = "select * from bookings as booking " +
-            "where current_timestamp between booking.start_date and booking.end_date " +
+            "where booking.booker_id = ?1 and " +
+            "current_timestamp between booking.start_date and booking.end_date " +
             "order by booking.start_date desc", nativeQuery = true)
-    List<Booking> findByBookerIdCurrentBookings(Integer userId);
+    List<Booking> findByBookerIdCurrentBookings(Integer userId, PageRequest pageable);
 }
