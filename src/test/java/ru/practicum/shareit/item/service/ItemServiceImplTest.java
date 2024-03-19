@@ -45,6 +45,7 @@ class ItemServiceImplTest {
 
     @Mock
     private CommentMapper commentMapper;
+
     @Test
     void createItemWhenItemValid() {
         User user = new User();
