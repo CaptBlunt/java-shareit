@@ -203,17 +203,17 @@ public class ItemServiceImpl implements ItemService {
 
         List<Comment> comments = commentRepository.findByItemIdAndOwnerId(item.getId());
         if (comments.isEmpty()) {
-            comments = new ArrayList<>();
-        }
-        List<CommentResponse> commentResponses = new ArrayList<>();
+            itemUpd.setComments(new ArrayList<>());
+        } else {
+            List<CommentResponse> commentResponses = new ArrayList<>();
 
-        for (Comment comment : comments) {
-            User commentFromUser = userRepository.getReferenceById(comment.getAuthorName().getId());
-            CommentResponse dto = commentMapper.commentResponseFromComment(comment, commentFromUser.getName());
-            commentResponses.add(dto);
+            for (Comment comment : comments) {
+                User commentFromUser = userRepository.getReferenceById(comment.getAuthorName().getId());
+                CommentResponse dto = commentMapper.commentResponseFromComment(comment, commentFromUser.getName());
+                commentResponses.add(dto);
+            }
+            itemUpd.setComments(commentResponses);
         }
-        itemUpd.setComments(commentResponses);
-
         return itemRepository.save(itemUpd);
     }
 
@@ -241,12 +241,7 @@ public class ItemServiceImpl implements ItemService {
         if (!bookingFuture.isEmpty() && bookingsPast.isEmpty()) {
             throw new AccessibilityErrorException("Пользователь забронировал эту вещь в будущем");
         }
-
-        Comment newComment = commentMapper.commentFromCommentRequest(commentMapper.commentRequestFromComment(comment), user, itemForComment);
-        Comment commentSave = commentRepository.save(newComment);
-
-        //return commentRepository.save(newComment);
-        return commentRepository.getReferenceById(commentSave.getId());
+        return commentRepository.save(commentMapper.commentFromCommentRequest(commentMapper.commentRequestFromComment(comment), user, itemForComment));
     }
 
     public void validateItem(Item item) {
