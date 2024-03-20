@@ -56,6 +56,67 @@ class ItemServiceImplTest {
 
 
     @Test
+    void getAllItemsByUserId() {
+        User owner = new User();
+        owner.setId(1);
+        owner.setEmail("dsad");
+        owner.setName("sadasd");
+
+        User author = new User();
+        author.setId(7);
+        author.setEmail("dsaadsd");
+        author.setName("saddasdasd");
+
+
+        CommentResponse commentResponse = CommentResponse.builder()
+                .id(1)
+                .text("dasd")
+                .authorName("saddasdasd")
+                .created(LocalDateTime.now().minusDays(1))
+                .build();
+
+        List<CommentResponse> commentResponses = List.of(commentResponse);
+
+        Item item = new Item();
+        item.setId(1);
+        item.setName("Test Item");
+        item.setDescription("Test Description");
+        item.setOwner(owner);
+        item.setComments(commentResponses);
+        item.setAvailable(true);
+
+        List<Item> items = List.of(item);
+
+        Comment comment = Comment.builder()
+                .id(1)
+                .text("dasd")
+                .item(item)
+                .authorName(author)
+                .created(LocalDateTime.now().minusDays(1))
+                .build();
+
+
+        List<Comment> comments = List.of(comment);
+
+        PageRequest page = PageRequest.of(1 / 10, 10);
+
+        when(itemRepository.findByOwnerId(anyInt(), eq(page))).thenReturn(items);
+
+        when(commentRepository.findByItemIdAndOwnerId(anyInt())).thenReturn(comments);
+
+        when(userRepository.getReferenceById(author.getId())).thenReturn(author);
+
+        when(commentMapper.commentResponseFromComment(eq(comment), eq("saddasdasd"))).thenReturn(commentResponse);
+
+        when(itemMapper.itemFromItemResponse(itemMapper.itemResponseFromItemForUser(eq(item), eq(commentResponses)))).thenReturn(item);
+
+        List<Item> result = itemService.findByOwnerId(1, 1, 10);
+
+        assertEquals(result, items);
+
+    }
+
+    @Test
     void getItemByIdWhenUserNotOwner() {
         User owner = new User();
         owner.setId(1);
@@ -386,7 +447,7 @@ class ItemServiceImplTest {
         PageRequest page = PageRequest.of(1 / 10, 10);
 
         when(itemRepository.findByOwnerId(anyInt(), eq(page))).thenReturn(items);
-        when(commentRepository.findByItemIdAndOwnerId(anyInt())).thenReturn(comments);
+        when(commentRepository.findByItemIdAndOwnerId(anyInt())).thenReturn(new ArrayList<>());
 
         when(itemMapper.itemFromItemResponse(itemMapper.itemForOwner(item, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), new ArrayList<>()))).thenReturn(item);
 

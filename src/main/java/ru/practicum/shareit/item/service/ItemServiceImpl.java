@@ -99,15 +99,7 @@ public class ItemServiceImpl implements ItemService {
                     List<Comment> comments = commentRepository.findByItemIdAndOwnerId(item.getId());
                     List<CommentResponse> commentResponses = new ArrayList<>();
 
-                    List<Booking> bookings = new ArrayList<>();
-                    List<Booking> pastBookings = new ArrayList<>();
-                    List<Booking> futureBookings = new ArrayList<>();
-
-                    if (comments.isEmpty()) {
-
-                        bookings = bookingRepository.findByItemId(item.getId());
-                        pastBookings = bookingRepository.findByOwnerIdAndItemIdPastBookings(item.getOwner().getId(), item.getId());
-                        futureBookings = bookingRepository.findByOwnerIdAndItemIdFutureBookings(item.getOwner().getId(), item.getId());
+                    if (!comments.isEmpty()) {
 
                         for (Comment comment : comments) {
                             User user = userRepository.getReferenceById(comment.getAuthorName().getId());
@@ -115,6 +107,10 @@ public class ItemServiceImpl implements ItemService {
                             commentResponses.add(dto);
                         }
                     }
+                    List<Booking> bookings = bookingRepository.findByItemId(item.getId());
+                    List<Booking> pastBookings = bookingRepository.findByOwnerIdAndItemIdPastBookings(item.getOwner().getId(), item.getId());
+                    List<Booking> futureBookings = bookingRepository.findByOwnerIdAndItemIdFutureBookings(item.getOwner().getId(), item.getId());
+
                     return itemMapper.itemFromItemResponse(itemMapper.itemForOwner(item, commentResponses, bookings, pastBookings, futureBookings));
                 })
                 .sorted(Comparator.comparing(Item::getId))

@@ -76,10 +76,6 @@ class RequestControllerTest {
     }
 
     @Test
-    void getRequestsUser() {
-    }
-
-    @Test
     void getAllRequests() throws Exception {
         Integer userId = 1;
         Integer from = 0;

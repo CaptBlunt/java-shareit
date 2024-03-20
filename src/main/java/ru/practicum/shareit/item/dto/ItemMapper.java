@@ -17,16 +17,14 @@ import java.util.stream.Collectors;
 public class ItemMapper {
 
     public ItemResponse itemResponseFromItemForUser(Item item, List<CommentResponse> comments) {
-        ItemResponse dto = new ItemResponse();
-
-        dto.setId(item.getId());
-        dto.setName(item.getName());
-        dto.setDescription(item.getDescription());
-        dto.setAvailable(item.getAvailable());
-        dto.setLastBooking(null);
-        dto.setNextBooking(null);
-        dto.setComments(comments);
-        return dto;
+        return ItemResponse.builder()
+                .id(item.getId())
+                .name(item.getName())
+                .description(item.getDescription())
+                .available(item.getAvailable())
+                .lastBooking(null)
+                .nextBooking(null)
+                .comments(comments).build();
     }
 
     public ItemResponse itemResponseFromItem(Item item) {
@@ -93,6 +91,7 @@ public class ItemMapper {
         dto.setName(item.getName());
         dto.setDescription(item.getDescription());
         dto.setAvailable(item.getAvailable());
+        dto.setComments(comments);
 
         if (bookings.isEmpty()) {
             dto.setLastBooking(null);
@@ -100,27 +99,21 @@ public class ItemMapper {
             return dto;
         }
 
-        ItemResponse.ItemForOwner lastBookingDto = null;
-
         if (!pastBookings.isEmpty()) {
             Booking lastBooking = pastBookings.get(0);
-            lastBookingDto = new ItemResponse.ItemForOwner();
+            ItemResponse.ItemForOwner lastBookingDto = new ItemResponse.ItemForOwner();
             lastBookingDto.setId(lastBooking.getId());
             lastBookingDto.setBookerId(lastBooking.getBooker().getId());
+            dto.setLastBooking(lastBookingDto);
         }
-        dto.setLastBooking(lastBookingDto);
 
-        ItemResponse.ItemForOwner nextBookingDto = null;
         if (!futureBookings.isEmpty()) {
             Booking nextBooking = futureBookings.get(futureBookings.size() - 1);
-            nextBookingDto = new ItemResponse.ItemForOwner();
+            ItemResponse.ItemForOwner nextBookingDto = new ItemResponse.ItemForOwner();
             nextBookingDto.setId(nextBooking.getId());
             nextBookingDto.setBookerId(nextBooking.getBooker().getId());
+            dto.setNextBooking(nextBookingDto);
         }
-        dto.setNextBooking(nextBookingDto);
-
-        dto.setComments(comments);
-
         return dto;
     }
 
