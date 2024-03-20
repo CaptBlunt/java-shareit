@@ -5,7 +5,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidateException;
 import ru.practicum.shareit.item.dto.ItemForRequest;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
@@ -132,6 +134,55 @@ class RequestServiceImplTest {
 
         assertEquals(result.size(), requestForUsers.size());
         assertEquals(result.get(0), requestForUsers.get(0));
+    }
+
+    @Test
+    void getAllRequestsWhenWithoutParameters() {
+        int userId = 1;
+        User user = User.builder()
+                .id(userId)
+                .build();
+
+        User requestor = User.builder()
+                .id(2)
+                .build();
+
+        Request request = Request.builder()
+                .id(1)
+                .description("Test")
+                .requestor(requestor)
+                .createdDate(LocalDateTime.now().minusDays(1))
+                .build();
+
+        List<Request> requests = List.of(request);
+        when(requestRepository.findAllNotForCreator(userId)).thenReturn(requests);
+
+        List<Request> result = requestService.getAllRequests(userId, null, null);
+
+        assertEquals(result, requests);
+    }
+
+    @Test
+    void getAllRequestsWhenEmptyListWithParameters() {
+        int userId = 1;
+        int from = 1;
+        int size = 10;
+
+        List<Request> requests = Collections.emptyList();
+        PageRequest page = PageRequest.of(from / size, size);
+
+        when(requestRepository.findAllNotForCreator(eq(userId), eq(page))).thenReturn(requests);
+
+        List<Request> result = requestService.getAllRequests(userId, from, size);
+
+        assertEquals(result, requests);
+
+    }
+
+    @Test
+    void paginationNotValid() {
+        ValidateException exception = assertThrows(ValidateException.class, () -> requestService.getAllRequests(1, -1, 10));
+        assertEquals("Проверьте указанные параметры", exception.getMessage());
     }
 
     @Test

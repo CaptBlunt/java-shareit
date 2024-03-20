@@ -58,6 +58,20 @@ class ItemMapperTest {
     }
 
     @Test
+    void itemForRequestFromItem() {
+        Item item = new Item();
+        item.setId(1);
+        item.setName("Test Item");
+        item.setDescription("Test Description");
+        item.setAvailable(true);
+
+        ItemForRequest itemForRequest = itemMapper.itemForRequestFromItem(item);
+
+        assertEquals(item.getId(), itemForRequest.getId());
+        assertEquals(item.getRequest(), itemForRequest.getRequestId());
+    }
+
+    @Test
     void itemForOwner() {
         Item item = new Item();
         item.setId(1);

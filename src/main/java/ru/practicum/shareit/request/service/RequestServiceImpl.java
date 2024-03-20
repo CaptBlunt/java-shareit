@@ -84,18 +84,15 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public List<Request> getAllRequests(Integer userId, Integer from, Integer size) {
-        List<Request> requests;
-        if (from == null && size == null) {
-            requests = requestRepository.findAllNotForCreator(userId);
-        } else {
-            PageRequest pageable = pagination(from, size);
-            requests = requestRepository.findAllNotForCreator(userId, pageable);
-            if (requests.isEmpty()) {
-                return Collections.emptyList();
+            if (from == null && size == null) {
+                return requestRepository.findAllNotForCreator(userId);
             }
+
+            PageRequest pageable = pagination(from, size);
+            List<Request> requests = requestRepository.findAllNotForCreator(userId, pageable);
+
+            return requests.isEmpty() ? Collections.emptyList() : requests;
         }
-        return requests;
-    }
 
     public List<RequestForUser> getAllRequestForUser(Integer userId, Integer from, Integer size) {
         List<Request> requests = getAllRequests(userId, from, size);
