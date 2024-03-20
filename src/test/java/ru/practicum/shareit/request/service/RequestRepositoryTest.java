@@ -1,6 +1,5 @@
 package ru.practicum.shareit.request.service;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -81,6 +80,7 @@ class RequestRepositoryTest {
         assertEquals(requestList.get(0), requestTwo);
         assertEquals(requestList.get(1), requestThree);
     }
+
     @Test
     void findByRequestorIdOrderByCreatedDateDesc() {
         User owner = new User();
