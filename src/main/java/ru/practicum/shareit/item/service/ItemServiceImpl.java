@@ -215,15 +215,16 @@ public class ItemServiceImpl implements ItemService {
 
         List<Booking> bookingsPast = bookingRepository.findByBookerIdAndItemIdPastBookings(user.getId(), itemForComment.getId());
 
-        if (bookingsPast.isEmpty()) {
-            throw new AccessibilityErrorException("Пользователь не бронировал эту вещь, либо бронирование ещё не закончилось");
-        }
-
         List<Booking> bookingFuture = bookingRepository.findByBookerIdAndItemIdFutureBookings(user.getId(), itemForComment.getId());
 
         if (!bookingFuture.isEmpty() && bookingsPast.isEmpty()) {
             throw new AccessibilityErrorException("Пользователь забронировал эту вещь в будущем");
         }
+
+        if (bookingsPast.isEmpty()) {
+            throw new AccessibilityErrorException("Пользователь не бронировал эту вещь, либо бронирование ещё не закончилось");
+        }
+
         return commentRepository.save(commentMapper.commentFromCommentRequest(commentMapper.commentRequestFromComment(comment), user, itemForComment));
     }
 

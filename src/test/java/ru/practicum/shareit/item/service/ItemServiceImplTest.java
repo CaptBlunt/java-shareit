@@ -12,6 +12,7 @@ import ru.practicum.shareit.booking.service.BookingRepository;
 import ru.practicum.shareit.comments.dto.CommentMapper;
 import ru.practicum.shareit.comments.dto.CommentResponse;
 import ru.practicum.shareit.comments.model.Comment;
+import ru.practicum.shareit.exception.AccessibilityErrorException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidateException;
 import ru.practicum.shareit.item.dto.ItemMapper;
@@ -53,6 +54,30 @@ class ItemServiceImplTest {
 
     @Mock
     private ItemMapper itemMapper;
+
+
+
+    @Test
+    void paginationNotValid() {
+        ValidateException exception = assertThrows(ValidateException.class, () -> itemService.findByOwnerId(1, -1, 10));
+        assertEquals("Проверьте указанные параметры", exception.getMessage());
+    }
+
+    @Test
+    void pagination() {
+        PageRequest pageRequest = PageRequest.of(0 / 1000, 1000);
+
+        PageRequest result = itemService.pagination(null, null);
+
+        assertEquals(result, pageRequest);
+    }
+
+    @Test
+    void searchWhenSubstringEmpty() {
+        List<Item> emptyList = itemService.searchBySubstring("", "", 10, 10);
+
+        assertEquals(emptyList, new ArrayList<>());
+    }
 
 
     @Test
@@ -615,5 +640,112 @@ class ItemServiceImplTest {
         ValidateException exception = assertThrows(ValidateException.class, () -> itemService.validateItem(item));
 
         assertEquals("Некорректно указаны данные", exception.getMessage());
+    }
+
+    @Test
+    void addCommentWhenUserNotBooking() {
+        int itemId = 1;
+        int userId = 2;
+        Comment newComment = Comment.builder()
+                .text("Test")
+                .build();
+
+        User user = new User();
+        user.setId(1);
+
+        User author = new User();
+        author.setId(2);
+
+        Item item = new Item();
+        item.setId(1);
+        item.setName("Test Item");
+        item.setDescription("Test Description");
+        item.setOwner(user);
+        item.setAvailable(true);
+
+        Item itemNew = new Item();
+        itemNew.setId(1);
+        itemNew.setName("Test Item2");
+        itemNew.setDescription("Test Description2");
+        itemNew.setOwner(user);
+        itemNew.setAvailable(true);
+
+        Comment commentNew = Comment.builder()
+                .text(newComment.getText())
+                .item(itemNew)
+                .authorName(author)
+                .created(LocalDateTime.of(2024, 3, 19, 0, 0))
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(author));
+
+        when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
+
+        when(bookingRepository.findByBookerIdAndItemIdPastBookings(author.getId(), item.getId())).thenThrow(new AccessibilityErrorException("Пользователь не бронировал эту вещь, либо бронирование ещё не закончилось"));
+
+        AccessibilityErrorException exception = assertThrows(AccessibilityErrorException.class, ()-> itemService.addComment(itemId, commentNew, author.getId()));
+
+        assertEquals("Пользователь не бронировал эту вещь, либо бронирование ещё не закончилось", exception.getMessage());
+    }
+
+    @Test
+    void addCommentWhenUserBookingInFuture() {
+        int itemId = 1;
+        int userId = 2;
+        Comment newComment = Comment.builder()
+                .text("Test")
+                .build();
+
+        User user = new User();
+        user.setId(1);
+
+        User author = new User();
+        author.setId(2);
+
+        Item item = new Item();
+        item.setId(1);
+        item.setName("Test Item");
+        item.setDescription("Test Description");
+        item.setOwner(user);
+        item.setAvailable(true);
+
+        Item itemNew = new Item();
+        itemNew.setId(1);
+        itemNew.setName("Test Item2");
+        itemNew.setDescription("Test Description2");
+        itemNew.setOwner(user);
+        itemNew.setAvailable(true);
+
+        Comment commentNew = Comment.builder()
+                .text(newComment.getText())
+                .item(itemNew)
+                .authorName(author)
+                .created(LocalDateTime.of(2024, 3, 19, 0, 0))
+                .build();
+
+        Comment commentNewSave = Comment.builder()
+                .id(1)
+                .text(newComment.getText())
+                .item(itemNew)
+                .authorName(author)
+                .created(LocalDateTime.of(2024, 3, 19, 0, 0))
+                .build();
+
+        List<Booking> bookingsPast = Collections.emptyList();
+
+        List<Booking> bookingsFuture = List.of(new Booking());
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(author));
+
+        when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
+
+        when(bookingRepository.findByBookerIdAndItemIdPastBookings(author.getId(), item.getId())).thenReturn(bookingsPast);
+
+        when(bookingRepository.findByBookerIdAndItemIdFutureBookings(author.getId(), item.getId())).thenReturn(bookingsFuture);
+
+
+        AccessibilityErrorException exception = assertThrows(AccessibilityErrorException.class, () -> itemService.addComment(itemId, newComment, userId));
+
+        assertEquals("Пользователь забронировал эту вещь в будущем", exception.getMessage());
     }
 }
