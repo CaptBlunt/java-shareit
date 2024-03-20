@@ -1,6 +1,7 @@
 package ru.practicum.shareit.comments.dto;
 
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.UtilityClass;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.comments.model.Comment;
 import ru.practicum.shareit.item.model.Item;

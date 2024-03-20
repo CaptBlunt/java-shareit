@@ -18,6 +18,7 @@ import ru.practicum.shareit.user.service.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -79,12 +80,31 @@ class BookingServiceImplTest {
             .item(item)
             .build();
 
+    Booking bookingPast = Booking.builder()
+            .id(5)
+            .start(LocalDateTime.now().minusDays(4))
+            .end(LocalDateTime.now().minusDays(3))
+            .status(BookingStatus.PAST)
+            .booker(booker)
+            .item(item)
+            .build();
+
+    Booking bookingFuture = Booking.builder()
+            .id(5)
+            .start(LocalDateTime.now().plusDays(1))
+            .end(LocalDateTime.now().plusDays(2))
+            .status(BookingStatus.FUTURE)
+            .booker(booker)
+            .item(item)
+            .build();
+
     Booking bookingForSave = Booking.builder()
             .item(item)
             .start(LocalDateTime.now().plusDays(1))
             .end(LocalDateTime.now().plusDays(3))
             .booker(booker)
             .build();
+
     Booking bookingSaved = Booking.builder()
             .id(1)
             .start(LocalDateTime.now().plusDays(1))
@@ -132,6 +152,90 @@ class BookingServiceImplTest {
     }
 
     @Test
+    void getBookingsWhenUserOwnerStatusPast() {
+        List<Booking> bookings = Collections.singletonList(bookingPast);
+
+        PageRequest pageable = PageRequest.of(1 / 10, 10);
+
+        when(bookingRepository.findByOwnerIdPastBookings(anyInt(), eq(pageable))).thenReturn(bookings);
+
+        List<Booking> result = bookingService.getBookingsByUserId(2, "PAST", true, 1, 10);
+
+        assertEquals(bookings.size(), result.size());
+        assertEquals(bookings.get(0), result.get(0));
+    }
+
+    @Test
+    void getBookingsWhenUserOwnerStatusWaiting() {
+        List<Booking> bookings = Collections.singletonList(bookingTwo);
+
+        PageRequest pageable = PageRequest.of(1 / 10, 10);
+
+        when(bookingRepository.findByOwnerIdAndStatus(anyInt(), eq("WAITING"), eq(pageable))).thenReturn(bookings);
+
+        List<Booking> result = bookingService.getBookingsByUserId(2, "WAITING", true, 1, 10);
+
+        assertEquals(bookings.size(), result.size());
+        assertEquals(bookings.get(0), result.get(0));
+    }
+
+    @Test
+    void getBookingsWhenUserOwnerStatusFuture() {
+        List<Booking> bookings = Collections.singletonList(bookingFuture);
+
+        PageRequest pageable = PageRequest.of(1 / 10, 10);
+
+        when(bookingRepository.findByOwnerIdFutureBookings(anyInt(), eq(pageable))).thenReturn(bookings);
+
+        List<Booking> result = bookingService.getBookingsByUserId(2, "FUTURE", true, 1, 10);
+
+        assertEquals(bookings.size(), result.size());
+        assertEquals(bookings.get(0), result.get(0));
+    }
+
+    @Test
+    void getBookingsWhenUserNotOwnerStatusFuture() {
+        List<Booking> bookings = Collections.singletonList(bookingFuture);
+
+        PageRequest pageable = PageRequest.of(1 / 10, 10);
+
+        when(bookingRepository.findByBookerIdFutureBookings(eq(1), eq(pageable))).thenReturn(bookings);
+
+        List<Booking> result = bookingService.getBookingsByUserId(1, "FUTURE", false, 1, 10);
+
+        assertEquals(bookings.size(), result.size());
+        assertEquals(bookings.get(0), result.get(0));
+    }
+
+    @Test
+    void getBookingsWhenUserNotOwnerStatusPast() {
+        List<Booking> bookings = Collections.singletonList(bookingPast);
+
+        PageRequest pageable = PageRequest.of(1 / 10, 10);
+
+        when(bookingRepository.findByBookerIdPastBookings(eq(1), eq(pageable))).thenReturn(bookings);
+
+        List<Booking> result = bookingService.getBookingsByUserId(1, "PAST", false, 1, 10);
+
+        assertEquals(bookings.size(), result.size());
+        assertEquals(bookings.get(0), result.get(0));
+    }
+
+    @Test
+    void getBookingsWhenUserNotOwnerStatusAll() {
+        List<Booking> bookings = Arrays.asList(bookingPast, bookingFuture);
+
+        PageRequest pageable = PageRequest.of(1 / 10, 10);
+
+        when(bookingRepository.findByBookerOrderByStartDesc(eq(1), eq(pageable))).thenReturn(bookings);
+
+        List<Booking> result = bookingService.getBookingsByUserId(1, "ALL", false, 1, 10);
+
+        assertEquals(bookings.size(), result.size());
+        assertEquals(bookings.get(0), result.get(0));
+    }
+
+    @Test
     void getBookingsWhenStateUnknown() {
         AccessibilityErrorException exception = assertThrows(AccessibilityErrorException.class, () -> bookingService.getBookingsByUserId(1, "UNKNOWN", true, 1, 10));
 
@@ -143,6 +247,33 @@ class BookingServiceImplTest {
         NotFoundException exception = assertThrows(NotFoundException.class, () -> bookingService.getBookingsByUserId(1, "ALL", true, 1, 10));
 
         assertEquals("Бронирований не найдено", exception.getMessage());
+    }
+
+    @Test
+    void getBookingWhenUserOwner() {
+        when(bookingRepository.findById(anyInt())).thenReturn(Optional.of(bookingOne));
+
+        Booking result = bookingService.getBooking(bookingOne.getId(), 2);
+
+        assertEquals(result, bookingOne);
+    }
+
+    @Test
+    void getBookingWhenBookingNotFound() {
+        when(bookingRepository.findById(anyInt())).thenThrow(new NotFoundException("Бронирование не найдено"));
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> bookingService.getBooking(10000, 10000));
+
+        assertEquals("Бронирование не найдено", exception.getMessage());
+    }
+
+    @Test
+    void getBookingWhenUserNotOwner() {
+        when(bookingRepository.findById(anyInt())).thenReturn(Optional.of(bookingOne));
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> bookingService.getBooking(1, 10));
+
+        assertEquals("Пользователь не является владельцем вещи", exception.getMessage());
     }
 
     @Test
