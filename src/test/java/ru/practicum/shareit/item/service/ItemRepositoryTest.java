@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.service;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,11 +34,13 @@ class ItemRepositoryTest {
     @Autowired
     private RequestRepository requestRepository;
 
-    @AfterEach
+
+    @BeforeEach
     private void delete() {
         commentRepository.deleteAll();
         userRepository.deleteAll();
         itemRepository.deleteAll();
+        requestRepository.deleteAll();
     }
 
     @Test

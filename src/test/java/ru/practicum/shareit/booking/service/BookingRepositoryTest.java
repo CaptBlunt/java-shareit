@@ -34,6 +34,33 @@ class BookingRepositoryTest {
     @Autowired
     private BookingRepository bookingRepository;
 
+
+
+    @BeforeEach
+    void delete() {
+        commentRepository.deleteAll();
+        userRepository.deleteAll();
+        itemRepository.deleteAll();
+        bookingRepository.deleteAll();
+
+        userRepository.save(userOwner);
+        userRepository.save(userBooker);
+        itemRepository.save(item);
+        itemRepository.save(itemTwo);
+        bookingRepository.save(booking);
+        bookingRepository.save(bookingTwo);
+        bookingRepository.save(bookingThree);
+        bookingRepository.save(bookingFour);
+    }
+
+    @AfterEach
+    void deleteAll() {
+        commentRepository.deleteAll();
+        userRepository.deleteAll();
+        itemRepository.deleteAll();
+        bookingRepository.deleteAll();
+    }
+
     User userOwner = User.builder()
             .email("bob@gamail.com")
             .name("Bob")
@@ -90,17 +117,6 @@ class BookingRepositoryTest {
 
     PageRequest page = PageRequest.of(1 / 10, 10);
 
-    @BeforeEach
-    void save() {
-        userRepository.save(userOwner);
-        userRepository.save(userBooker);
-        itemRepository.save(item);
-        itemRepository.save(itemTwo);
-        bookingRepository.save(booking);
-        bookingRepository.save(bookingTwo);
-        bookingRepository.save(bookingThree);
-        bookingRepository.save(bookingFour);
-    }
 
     @Test
     void findBookingsWhenOwnerIdOneAndBookingsThree() {
@@ -145,11 +161,5 @@ class BookingRepositoryTest {
         assertEquals(bookings.get(0).getBooker().getId(), userBooker.getId());
     }
 
-    @AfterEach
-    void delete() {
-        commentRepository.deleteAll();
-        userRepository.deleteAll();
-        itemRepository.deleteAll();
-        bookingRepository.deleteAll();
-    }
+
 }

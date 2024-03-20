@@ -1,6 +1,7 @@
 package ru.practicum.shareit.user.service;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -12,6 +13,7 @@ import ru.practicum.shareit.item.service.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,7 +29,8 @@ class CommentRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
-    @AfterEach
+
+    @BeforeEach
     private void delete() {
         commentRepository.deleteAll();
         userRepository.deleteAll();
@@ -36,32 +39,34 @@ class CommentRepositoryTest {
 
     @Test
     void testFindByItemIdAndOwnerId() {
-        User user = new User();
-        user.setEmail("bob@gamail.com");
-        user.setName("Bob");
-        userRepository.save(user);
+        User owner = new User();
+        owner.setEmail("bob@gamail.com");
+        owner.setName("Bob");
+        userRepository.save(owner);
 
         User user2 = new User();
         user2.setName("Bob2");
         user2.setEmail("bob2@gamail.com");
         userRepository.save(user2);
-
-        User user3 = new User();
-        user3.setName("Boby");
-        user3.setEmail("boby@gamail.com");
-        userRepository.save(user3);
-
         Item item = new Item();
         item.setName("Test");
         item.setDescription("Test Item");
-        item.setOwner(user);
+        item.setOwner(owner);
         item.setAvailable(true);
         itemRepository.save(item);
+
+        String str = "2024-03-08 12:30";
+        String str1 = "2024-03-09 12:30";
+        String str2 = "2024-03-10 12:30";
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        LocalDateTime dateTime1 = LocalDateTime.parse(str1, formatter);
+        LocalDateTime dateTime2 = LocalDateTime.parse(str2, formatter);
 
         Comment comment = new Comment();
         comment.setText("TestTestTest");
         comment.setItem(item);
-        comment.setCreated(LocalDateTime.now().minusDays(1));
+        comment.setCreated(dateTime1);
         comment.setAuthorName(user2);
 
         commentRepository.save(comment);
@@ -69,12 +74,12 @@ class CommentRepositoryTest {
         Comment comment2 = new Comment();
         comment2.setText("Test2Test2Test2");
         comment2.setItem(item);
-        comment2.setCreated(LocalDateTime.now().minusHours(2));
-        comment2.setAuthorName(user3);
+        comment2.setCreated(dateTime2);
+        comment2.setAuthorName(user2);
 
         commentRepository.save(comment2);
 
-        List<Comment> comments = commentRepository.findByItemIdAndOwnerId(user.getId());
+        List<Comment> comments = commentRepository.findByItemIdAndOwnerId(item.getId());
 
         assertFalse(comments.isEmpty());
         assertEquals(comments.get(0).getItem().getId(), item.getId());

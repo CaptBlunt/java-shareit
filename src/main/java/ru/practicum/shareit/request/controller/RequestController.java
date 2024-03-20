@@ -14,12 +14,12 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping(path = "/requests")
+@RequestMapping("/requests")
 @RequiredArgsConstructor
 public class RequestController {
 
-    private final RequestMapper requestMapper;
     private final RequestServiceImpl requestService;
+    private final RequestMapper requestMapper;
 
     @PostMapping
     public RequestResponseForCreate postRequest(@RequestBody RequestFromUser request, @RequestHeader(value = "X-Sharer-User-Id") Integer userId) {
@@ -37,7 +37,7 @@ public class RequestController {
         return response;
     }
 
-    @GetMapping(path = "/all")
+    @GetMapping("/all")
     public List<RequestForUser> getAllRequests(@RequestHeader(value = "X-Sharer-User-Id") Integer userId, @RequestParam(required = false) Integer from, @RequestParam(required = false) Integer size) {
         log.info("Пришёл GET запрос /requests/all от пользователя id {}", userId);
         List<RequestForUser> response = requestService.getAllRequestForUser(userId, from, size);

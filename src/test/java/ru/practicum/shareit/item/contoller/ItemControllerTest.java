@@ -105,7 +105,6 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.name", is(itemSaved.getName())))
                 .andExpect(jsonPath("$.description", is(itemSaved.getDescription())))
                 .andExpect(jsonPath("$.available", is(itemSaved.getAvailable())));
-
     }
 
     @Test

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidateException;
 import ru.practicum.shareit.item.dto.ItemForRequest;
@@ -20,6 +21,7 @@ import java.util.List;
 
 @Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class RequestServiceImpl implements RequestService {
 
@@ -35,16 +37,15 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional
     public Request createRequest(Request request) {
-        userRepository.findById(request.getRequestor().getId())
-                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
-
         if (request.getDescription() == null || request.getDescription().isEmpty()) {
             throw new ValidateException("Запрос не может быть пустым");
         }
+        userRepository.findById(request.getRequestor().getId())
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
-        Request saveRequest = requestRepository.save(request);
-        return requestRepository.getReferenceById(saveRequest.getId());
+        return requestRepository.save(request);
     }
 
     public List<Request> getRequests(Integer userId) {

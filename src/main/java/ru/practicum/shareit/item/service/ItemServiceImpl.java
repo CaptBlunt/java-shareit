@@ -59,15 +59,14 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
         List<Comment> comments = commentRepository.findByItemIdAndOwnerId(item.getId());
-        if (comments.isEmpty()) {
-            comments = new ArrayList<>();
-        }
         List<CommentResponse> commentResponses = new ArrayList<>();
 
-        for (Comment comment : comments) {
-            User user = userRepository.getReferenceById(comment.getAuthorName().getId());
-            CommentResponse dto = commentMapper.commentResponseFromComment(comment, user.getName());
-            commentResponses.add(dto);
+        if (!comments.isEmpty()) {
+            for (Comment comment : comments) {
+                User user = userRepository.getReferenceById(comment.getAuthorName().getId());
+                CommentResponse dto = commentMapper.commentResponseFromComment(comment, user.getName());
+                commentResponses.add(dto);
+            }
         }
         if (!item.getOwner().getId().equals(userId)) {
             return itemMapper.itemFromItemResponse(itemMapper.itemResponseFromItemForUser(item, commentResponses));
@@ -100,22 +99,24 @@ public class ItemServiceImpl implements ItemService {
         return items.stream()
                 .map(item -> {
                     List<Comment> comments = commentRepository.findByItemIdAndOwnerId(item.getId());
-                    if (comments.isEmpty()) {
-                        comments = new ArrayList<>();
-                    }
-
-                    List<Booking> bookings = bookingRepository.findByItemId(item.getId());
-                    List<Booking> pastBookings = bookingRepository.findByOwnerIdAndItemIdPastBookings(item.getOwner().getId(), item.getId());
-                    List<Booking> futureBookings = bookingRepository.findByOwnerIdAndItemIdFutureBookings(item.getOwner().getId(), item.getId());
-
                     List<CommentResponse> commentResponses = new ArrayList<>();
 
-                    for (Comment comment : comments) {
-                        User user = userRepository.getReferenceById(comment.getAuthorName().getId());
-                        CommentResponse dto = commentMapper.commentResponseFromComment(comment, user.getName());
-                        commentResponses.add(dto);
-                    }
+                    List<Booking> bookings = new ArrayList<>();
+                    List<Booking> pastBookings = new ArrayList<>();
+                    List<Booking> futureBookings = new ArrayList<>();
 
+                    if (comments.isEmpty()) {
+
+                        bookings = bookingRepository.findByItemId(item.getId());
+                        pastBookings = bookingRepository.findByOwnerIdAndItemIdPastBookings(item.getOwner().getId(), item.getId());
+                        futureBookings = bookingRepository.findByOwnerIdAndItemIdFutureBookings(item.getOwner().getId(), item.getId());
+
+                        for (Comment comment : comments) {
+                            User user = userRepository.getReferenceById(comment.getAuthorName().getId());
+                            CommentResponse dto = commentMapper.commentResponseFromComment(comment, user.getName());
+                            commentResponses.add(dto);
+                        }
+                    }
                     return itemMapper.itemFromItemResponse(itemMapper.itemForOwner(item, commentResponses, bookings, pastBookings, futureBookings));
                 })
                 .sorted(Comparator.comparing(Item::getId))
@@ -149,18 +150,18 @@ public class ItemServiceImpl implements ItemService {
             if (item.getAvailable()) {
                 List<Comment> comments = commentRepository.findByItemIdAndOwnerId(item.getId());
                 if (comments.isEmpty()) {
-                    comments = new ArrayList<>();
-                }
-                userRepository.getReferenceById(item.getOwner().getId());
+                    itemsResponse.add(itemMapper.itemFromItemResponse(itemMapper.itemResponseFromItemForUser(item, new ArrayList<>())));
+                    //comments = new ArrayList<>();
+                } else {
+                    List<CommentResponse> dtos = new ArrayList<>();
 
-                List<CommentResponse> dtos = new ArrayList<>();
-
-                for (Comment comment : comments) {
-                    User user = userRepository.getReferenceById(comment.getAuthorName().getId());
-                    CommentResponse dto = commentMapper.commentResponseFromComment(comment, user.getName());
-                    dtos.add(dto);
+                    for (Comment comment : comments) {
+                        User user = userRepository.getReferenceById(comment.getAuthorName().getId());
+                        CommentResponse dto = commentMapper.commentResponseFromComment(comment, user.getName());
+                        dtos.add(dto);
+                    }
+                    itemsResponse.add(itemMapper.itemFromItemResponse(itemMapper.itemResponseFromItemForUser(item, dtos)));
                 }
-                itemsResponse.add(itemMapper.itemFromItemResponse(itemMapper.itemResponseFromItemForUser(item, dtos)));
             }
         }
         return itemsResponse;
