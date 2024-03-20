@@ -29,6 +29,16 @@ public class BookingServiceImpl implements BookingService {
     private final BookingMapper bookingMapper;
 
     public PageRequest pagination(Integer from, Integer size) {
+        if (from == null) {
+            from = 0;
+        }
+        if (size == null) {
+            size = bookingRepository.findAll().size();
+        }
+
+        if ((from < 0 || size < 0) || (size == 0)) {
+            throw new ValidateException("Проверьте указанные параметры");
+        }
         return PageRequest.of(from / size, size);
     }
 
@@ -53,7 +63,6 @@ public class BookingServiceImpl implements BookingService {
         if (newBooking.getBooker().getId().equals(item.getOwner().getId())) {
             throw new NotFoundException("Нельзя забронировать свою вещь");
         }
-
 
         return bookingRepository.save(bookingMapper.bookingForCreate(newBooking, user, item));
     }
@@ -96,16 +105,6 @@ public class BookingServiceImpl implements BookingService {
         if (status == null) {
             throw new AccessibilityErrorException("Unknown state: " + state);
         } else {
-            if (from == null) {
-                from = 0;
-            }
-            if (size == null) {
-                size = bookingRepository.findAll().size();
-            }
-
-            if ((from < 0 || size < 0) || (size == 0)) {
-                throw new ValidateException("Проверьте указанные параметры");
-            }
             PageRequest pageable = pagination(from, size);
 
             if (isOwner) {

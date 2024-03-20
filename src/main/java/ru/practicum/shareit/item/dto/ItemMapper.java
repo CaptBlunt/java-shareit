@@ -98,27 +98,27 @@ public class ItemMapper {
             dto.setLastBooking(null);
             dto.setNextBooking(null);
             return dto;
-
-        } else {
-            ItemResponse.ItemForOwner lastBookingDto = null;
-            if (!pastBookings.isEmpty()) {
-                Booking lastBooking = pastBookings.get(0);
-                lastBookingDto = new ItemResponse.ItemForOwner();
-                lastBookingDto.setId(lastBooking.getId());
-                lastBookingDto.setBookerId(lastBooking.getBooker().getId());
-            }
-            dto.setLastBooking(lastBookingDto);
-
-            ItemResponse.ItemForOwner nextBookingDto = null;
-            if (!futureBookings.isEmpty()) {
-                Booking nextBooking = futureBookings.get(futureBookings.size() - 1);
-                nextBookingDto = new ItemResponse.ItemForOwner();
-                nextBookingDto.setId(nextBooking.getId());
-                nextBookingDto.setBookerId(nextBooking.getBooker().getId());
-            }
-            dto.setNextBooking(nextBookingDto);
-            dto.setComments(comments);
         }
+        ItemResponse.ItemForOwner lastBookingDto = null;
+        if (!pastBookings.isEmpty()) {
+            Booking lastBooking = pastBookings.get(0);
+            lastBookingDto = new ItemResponse.ItemForOwner();
+            lastBookingDto.setId(lastBooking.getId());
+            lastBookingDto.setBookerId(lastBooking.getBooker().getId());
+        }
+        dto.setLastBooking(lastBookingDto);
+
+        ItemResponse.ItemForOwner nextBookingDto = null;
+        if (!futureBookings.isEmpty()) {
+            Booking nextBooking = futureBookings.get(futureBookings.size() - 1);
+            nextBookingDto = new ItemResponse.ItemForOwner();
+            nextBookingDto.setId(nextBooking.getId());
+            nextBookingDto.setBookerId(nextBooking.getBooker().getId());
+        }
+        dto.setNextBooking(nextBookingDto);
+
+        dto.setComments(comments);
+
         return dto;
     }
 

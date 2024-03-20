@@ -39,6 +39,15 @@ public class ItemServiceImpl implements ItemService {
 
 
     public PageRequest pagination(Integer from, Integer size) {
+        if (from == null || from == 0) {
+            from = 0;
+        }
+        if (size == null) {
+            size = 1000;
+        }
+        if ((from < 0 || size < 0) || (size == 0)) {
+            throw new ValidateException("Проверьте указанные параметры");
+        }
         return PageRequest.of(from / size, size);
     }
 
@@ -83,17 +92,6 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional(readOnly = true)
     public List<Item> findByOwnerId(Integer userId, Integer from, Integer size) {
-        if (from == null) {
-            from = 0;
-        }
-        if (size == null) {
-            size = itemRepository.findAll().size();
-        }
-
-        if ((from < 0 || size < 0) || (size == 0)) {
-            throw new ValidateException("Проверьте указанные параметры");
-        }
-
         PageRequest pageable = pagination(from, size);
         List<Item> items = itemRepository.findByOwnerId(userId, pageable);
         return items.stream()
@@ -129,17 +127,6 @@ public class ItemServiceImpl implements ItemService {
         if (str.isEmpty()) {
             return new ArrayList<>();
         }
-
-        if (from == null || from == 0) {
-            from = 0;
-        }
-        if (size == null) {
-            size = itemRepository.findAll().size();
-        }
-
-        if ((from < 0 || size < 0) || (size == 0)) {
-            throw new ValidateException("Проверьте указанные параметры");
-        }
         PageRequest pageable = pagination(from, size);
 
         List<Item> items = itemRepository.findByNameContainingOrDescriptionContainingIgnoreCase(str, str1, pageable);
@@ -151,7 +138,6 @@ public class ItemServiceImpl implements ItemService {
                 List<Comment> comments = commentRepository.findByItemIdAndOwnerId(item.getId());
                 if (comments.isEmpty()) {
                     itemsResponse.add(itemMapper.itemFromItemResponse(itemMapper.itemResponseFromItemForUser(item, new ArrayList<>())));
-                    //comments = new ArrayList<>();
                 } else {
                     List<CommentResponse> dtos = new ArrayList<>();
 

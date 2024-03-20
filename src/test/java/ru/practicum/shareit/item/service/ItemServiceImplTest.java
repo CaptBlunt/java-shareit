@@ -6,13 +6,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
+import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.service.BookingRepository;
 import ru.practicum.shareit.comments.dto.CommentMapper;
+import ru.practicum.shareit.comments.dto.CommentResponse;
 import ru.practicum.shareit.comments.model.Comment;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidateException;
 import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.dto.ItemResponse;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.CommentRepository;
@@ -29,6 +32,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ItemServiceImplTest {
+
     @InjectMocks
     private ItemServiceImpl itemService;
 
@@ -46,6 +50,7 @@ class ItemServiceImplTest {
 
     @Mock
     private CommentMapper commentMapper;
+
     @Mock
     private ItemMapper itemMapper;
 
@@ -100,6 +105,204 @@ class ItemServiceImplTest {
         verify(userRepository).findById(1);
         verify(itemRepository).save(item);
         assertEquals(savedItem, createdItem);
+    }
+
+    @Test
+    void getItemByIdWhenCommentExists() {
+        int itemId = 2;
+        int userId = 1;
+
+        User owner = User.builder()
+                .id(4)
+                .email("dsad@dsa.com")
+                .name("dasdd")
+                .build();
+
+        User author = User.builder()
+                .id(1)
+                .email("dsad2@dsa.com")
+                .name("dasd2d")
+                .build();
+
+        Item item = Item.builder()
+                .id(2)
+                .name("test")
+                .description("dasd")
+                .owner(owner)
+                .available(true)
+                .comments(new ArrayList<>())
+                .build();
+
+        Comment comment = Comment.builder()
+                .id(1)
+                .text("dasd")
+                .item(item)
+                .authorName(author)
+                .created(LocalDateTime.now())
+                .build();
+
+        List<Comment> comments = List.of(comment);
+
+        CommentResponse commentResponse = CommentResponse.builder()
+                .id(1)
+                .text("dasd")
+                .authorName("dasd2d")
+                .created(comment.getCreated())
+                .build();
+
+        List<CommentResponse> commentResponses = List.of(commentResponse);
+
+        ItemResponse itemResponse = ItemResponse.builder()
+                .id(2)
+                .name("test")
+                .description("dasd")
+                .available(true)
+                .comments(commentResponses)
+                .build();
+
+        Item itemResponse1 = Item.builder()
+                .id(2)
+                .name("test")
+                .description("dasd")
+                .owner(owner)
+                .available(true)
+                .comments(commentResponses)
+                .build();
+
+        when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
+
+        when(commentRepository.findByItemIdAndOwnerId(item.getId())).thenReturn(comments);
+
+        when(userRepository.getReferenceById(comment.getAuthorName().getId())).thenReturn(author);
+
+        when(itemMapper.itemFromItemResponse(itemMapper.itemResponseFromItemForUser(item, commentResponses))).thenReturn(itemResponse1);
+
+        Item result = itemService.getItemById(itemId, userId);
+
+        assertEquals(result.getId(), itemResponse.getId());
+    }
+
+    @Test
+    void updateItemWhenCommentsNotEmpty() {
+
+        User author = User.builder()
+                .id(1)
+                .email("dsad2@dsa.com")
+                .name("dasd2d")
+                .build();
+
+        Item item = Item.builder()
+                .id(1)
+                .name("Test Item")
+                .description("Sample description")
+                .available(true)
+                .owner(User.builder().id(1).build())
+                .build();
+
+        List<Comment> comments = new ArrayList<>();
+        Comment comment1 = Comment.builder().id(1).authorName(User.builder().id(2).build()).text("Comment 1").build();
+        comments.add(comment1);
+
+        List<CommentResponse> commentResponses = new ArrayList<>();
+        CommentResponse response1 = new CommentResponse();
+        commentResponses.add(response1);
+        Item updatedItem = Item.builder()
+                .id(1)
+                .name("Updated Item")
+                .description("Updated description")
+                .available(false)
+                .owner(User.builder().id(1).build())
+                .comments(commentResponses)
+                .build();
+
+        when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+        when(userRepository.findById(item.getOwner().getId())).thenReturn(Optional.of(item.getOwner()));
+        when(commentRepository.findByItemIdAndOwnerId(item.getId())).thenReturn(comments);
+        when(userRepository.getReferenceById(comment1.getAuthorName().getId())).thenReturn(author);
+        when(commentMapper.commentResponseFromComment(any(), any())).thenReturn(response1);
+
+        when(itemRepository.save(any())).thenReturn(updatedItem);
+
+        Item result = itemService.updateItem(item);
+
+        assertEquals(updatedItem.getName(), result.getName());
+        assertEquals(updatedItem.getDescription(), result.getDescription());
+        assertEquals(updatedItem.getAvailable(), result.getAvailable());
+        assertEquals(commentResponses.size(), result.getComments().size());
+    }
+
+    @Test
+    void getItemByIdWhenLastBookingAndNextBookingId() {
+        int itemId = 2;
+        int userId = 1;
+
+        User owner = User.builder()
+                .id(1)
+                .email("dsad@dsa.com")
+                .name("dasdd")
+                .build();
+
+        User booker = User.builder()
+                .id(6)
+                .email("dsad2@dsa.com")
+                .name("dasdd")
+                .build();
+
+        Item item = Item.builder()
+                .id(2)
+                .name("test")
+                .description("dasd")
+                .owner(owner)
+                .available(true)
+                .comments(new ArrayList<>())
+                .build();
+
+        Booking bookingLast = Booking.builder()
+                .id(2)
+                .start(LocalDateTime.now().minusDays(1))
+                .end(LocalDateTime.now().minusHours(2))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+
+        Booking bookingFuture = Booking.builder()
+                .id(3)
+                .start(LocalDateTime.now().plusDays(1))
+                .end(LocalDateTime.now().plusDays(2))
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.APPROVED)
+                .build();
+
+        List<Booking> bookings = List.of(bookingLast, bookingFuture);
+        List<Booking> pastBookings = List.of(bookingLast);
+        List<Booking> futureBookings = List.of(bookingFuture);
+
+        Item itemResponse = Item.builder()
+                .id(2)
+                .name("test")
+                .description("dasd")
+                .available(true)
+                .comments(new ArrayList<>())
+                .lastBooking(ItemResponse.ItemForOwner.builder()
+                        .id(2)
+                        .bookerId(6)
+                        .build())
+                .nextBooking(ItemResponse.ItemForOwner.builder()
+                        .id(3)
+                        .bookerId(6)
+                        .build())
+                .build();
+
+        when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
+        when(bookingRepository.findByItemId(item.getId())).thenReturn(bookings);
+        when(bookingRepository.findByOwnerIdAndItemIdPastBookings(item.getOwner().getId(), item.getId())).thenReturn(pastBookings);
+        when(bookingRepository.findByOwnerIdAndItemIdFutureBookings(item.getOwner().getId(), item.getId())).thenReturn(futureBookings);
+        when(itemMapper.itemFromItemResponse(itemMapper.itemForOwner(item, new ArrayList<>(), bookings, pastBookings, futureBookings))).thenReturn(itemResponse);
+
+        Item result = itemService.getItemById(itemId, userId);
+        assertEquals(result, itemResponse);
     }
 
     @Test

@@ -6,11 +6,19 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.dto.ItemForRequest;
+import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.service.ItemRepository;
+import ru.practicum.shareit.request.dto.RequestForUser;
+import ru.practicum.shareit.request.dto.RequestMapper;
 import ru.practicum.shareit.request.model.Request;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,7 +36,15 @@ class RequestServiceImplTest {
     private UserRepository userRepository;
 
     @Mock
+    private ItemRepository itemRepository;
+
+    @Mock
     private RequestRepository requestRepository;
+
+    @Mock
+    private ItemMapper itemMapper;
+    @Mock
+    private RequestMapper requestMapper;
 
     @Test
     void createRequestWhenRequestValid() {
@@ -58,6 +74,125 @@ class RequestServiceImplTest {
         verify(userRepository).findById(1);
         verify(requestRepository).save(request);
         assertEquals(requestSaved, createdRequest);
+    }
+
+    @Test
+    void getRequestsForRequestor() {
+        int userId = 1;
+
+        User requestor = User.builder()
+                .id(1)
+                .build();
+
+        Request request = Request.builder()
+                .id(1)
+                .description("test")
+                .requestor(requestor)
+                .createdDate(LocalDateTime.now().minusDays(1))
+                .build();
+
+        Item item = Item.builder()
+                .id(1)
+                .name("dasd")
+                .description("dsad")
+                .available(true)
+                .build();
+
+        ItemForRequest itemZ = ItemForRequest.builder()
+                .id(1)
+                .name("dasd")
+                .description("dsad")
+                .available(true)
+                .requestId(1)
+                .build();
+
+        List<ItemForRequest> items = List.of(itemZ);
+
+        List<Request> requests = List.of(request);
+
+        RequestForUser requestT = RequestForUser.builder()
+                .id(1)
+                .description("test")
+                .created(LocalDateTime.now().minusDays(1))
+                .currentDate(LocalDateTime.now())
+                .items(items)
+                .build();
+
+        List<RequestForUser> requestForUsers = List.of(requestT);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(requestor));
+
+        when(requestService.getRequests(userId)).thenReturn(requests);
+
+        when(itemRepository.findByRequestId(request.getId())).thenReturn(item);
+
+        when(itemMapper.itemForRequestFromItem(item)).thenReturn(itemZ);
+
+        when(requestMapper.requestForUser(request, items)).thenReturn(requestT);
+
+        List<RequestForUser> result = requestService.getRequestsForUser(userId);
+
+        assertEquals(result.size(), requestForUsers.size());
+        assertEquals(result.get(0), requestForUsers.get(0));
+    }
+
+    @Test
+    void getRequestByIdForUser() {
+        int requestId = 1;
+        int userId = 1;
+
+        User user = User.builder()
+                .id(userId)
+                .build();
+
+        User requestor = User.builder()
+                .id(2)
+                .build();
+
+        Request request = Request.builder()
+                .id(requestId)
+                .description("Test")
+                .requestor(requestor)
+                .createdDate(LocalDateTime.now().minusDays(1))
+                .build();
+
+        Item item = Item.builder()
+                .id(1)
+                .name("dasd")
+                .description("dsad")
+                .available(true)
+                .build();
+
+        ItemForRequest itemForRequest = ItemForRequest.builder()
+                .id(1)
+                .name("dasd")
+                .description("dsad")
+                .available(true)
+                .requestId(requestId).build();
+
+        RequestForUser requestResp = RequestForUser.builder()
+                .id(requestId)
+                .description("Test")
+                .created(LocalDateTime.now().minusDays(1))
+                .currentDate(LocalDateTime.now())
+                .items(Collections.emptyList())
+                .build();
+
+        List<ItemForRequest> requestList = List.of(itemForRequest);
+
+        when(userRepository.findById(requestId)).thenReturn(Optional.of(user));
+
+        when(itemRepository.findByRequestId(requestId)).thenReturn(item);
+
+        when(requestRepository.findById(requestId)).thenReturn(Optional.of(request));
+
+        when(itemMapper.itemForRequestFromItem(item)).thenReturn(itemForRequest);
+
+        when(requestMapper.requestForUser(request, requestList)).thenReturn(requestResp);
+
+        RequestForUser result = requestService.getRequestByIdForUser(requestId, userId);
+
+        assertEquals(result.getId(), request.getId());
+        assertEquals(result.getDescription(),request.getDescription());
     }
 
     @Test

@@ -9,6 +9,7 @@ import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidateException;
 import ru.practicum.shareit.item.dto.ItemForRequest;
 import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemRepository;
 import ru.practicum.shareit.request.dto.RequestForUser;
 import ru.practicum.shareit.request.dto.RequestMapper;
@@ -33,6 +34,9 @@ public class RequestServiceImpl implements RequestService {
     private final RequestMapper requestMapper;
 
     public PageRequest pagination(Integer from, Integer size) {
+        if (from < 0 || size < 0) {
+            throw new ValidateException("Проверьте указанные параметры");
+        }
         return PageRequest.of(from / size, size);
     }
 
@@ -60,19 +64,21 @@ public class RequestServiceImpl implements RequestService {
     }
 
     public List<RequestForUser> getRequestsForUser(Integer userId) {
-
         List<Request> requests = getRequests(userId);
         List<RequestForUser> requestForUsers = new ArrayList<>();
 
         for (Request request : requests) {
-            List<ItemForRequest> itemForRequest = new ArrayList<>();
-            if (itemRepository.findByRequestId(request.getId()) == null) {
-                itemForRequest = Collections.emptyList();
+            List<ItemForRequest> itemForRequests = new ArrayList<>();
+            Item item = itemRepository.findByRequestId(request.getId());
+
+            if (item == null) {
+                itemForRequests = Collections.emptyList();
             } else {
-                itemForRequest.add(itemMapper.itemForRequestFromItem(itemRepository.findByRequestId(request.getId())));
+                itemForRequests.add(itemMapper.itemForRequestFromItem(item));
             }
-            requestForUsers.add(requestMapper.requestForUser(request, itemForRequest));
+            requestForUsers.add(requestMapper.requestForUser(request, itemForRequests));
         }
+
         return requestForUsers;
     }
 
@@ -82,10 +88,6 @@ public class RequestServiceImpl implements RequestService {
         if (from == null && size == null) {
             requests = requestRepository.findAllNotForCreator(userId);
         } else {
-
-            if (from < 0 || size < 0) {
-                throw new ValidateException("Проверьте указанные параметры");
-            }
             PageRequest pageable = pagination(from, size);
             requests = requestRepository.findAllNotForCreator(userId, pageable);
             if (requests.isEmpty()) {
@@ -122,12 +124,15 @@ public class RequestServiceImpl implements RequestService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
-        List<ItemForRequest> itemForRequest = new ArrayList<>();
-        if (itemRepository.findByRequestId(requestId) == null) {
-            itemForRequest = Collections.emptyList();
+        List<ItemForRequest> itemForRequests = new ArrayList<>();
+        Item item = itemRepository.findByRequestId(requestId);
+
+        if (item == null) {
+            itemForRequests = Collections.emptyList();
         } else {
-            itemForRequest.add(itemMapper.itemForRequestFromItem(itemRepository.findByRequestId(requestId)));
+            itemForRequests.add(itemMapper.itemForRequestFromItem(item));
         }
-        return requestMapper.requestForUser(getRequestById(requestId), itemForRequest);
+
+        return requestMapper.requestForUser(getRequestById(requestId), itemForRequests);
     }
 }
