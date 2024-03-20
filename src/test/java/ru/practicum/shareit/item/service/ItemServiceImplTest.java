@@ -683,7 +683,7 @@ class ItemServiceImplTest {
 
         when(bookingRepository.findByBookerIdAndItemIdPastBookings(author.getId(), item.getId())).thenThrow(new AccessibilityErrorException("Пользователь не бронировал эту вещь, либо бронирование ещё не закончилось"));
 
-        AccessibilityErrorException exception = assertThrows(AccessibilityErrorException.class, ()-> itemService.addComment(itemId, commentNew, author.getId()));
+        AccessibilityErrorException exception = assertThrows(AccessibilityErrorException.class, () -> itemService.addComment(itemId, commentNew, author.getId()));
 
         assertEquals("Пользователь не бронировал эту вещь, либо бронирование ещё не закончилось", exception.getMessage());
     }
