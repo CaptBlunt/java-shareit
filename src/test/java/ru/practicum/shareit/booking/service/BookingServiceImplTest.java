@@ -94,6 +94,57 @@ class BookingServiceImplTest {
             .item(item)
             .build();
 
+    Booking newBooking = Booking.builder()
+            .id(1)
+            .start(LocalDateTime.now().plusDays(1))
+            .end(LocalDateTime.now().plusDays(3))
+            .status(BookingStatus.APPROVED)
+            .booker(booker)
+            .item(item)
+            .build();
+
+    @Test
+    void approveBooking() {
+        when(bookingRepository.getReferenceById(anyInt())).thenReturn(bookingSaved);
+
+        when(itemRepository.getReferenceById(anyInt())).thenReturn(item);
+
+        when(bookingRepository.save(bookingSaved)).thenReturn(newBooking);
+
+        Booking result = bookingService.approveOrReject(1, 2, "true");
+
+        assertEquals(result, newBooking);
+    }
+
+    @Test
+    void getBookingsWhenUserNotOwner() {
+        List<Booking> bookings = Arrays.asList(bookingTwo, bookingOne);
+
+        PageRequest pageable = PageRequest.of(1 / 10, 10);
+
+        when(bookingRepository.findByBookerAndStatus(anyInt(), eq("WAITING"), eq(pageable))).thenReturn(bookings);
+
+        List<Booking> result = bookingService.getBookingsByUserId(10, "WAITING", false, 1, 10);
+
+        assertEquals(bookings.size(), result.size());
+        assertEquals(bookings.get(0), result.get(0));
+        assertEquals(bookings.get(1), result.get(1));
+    }
+
+    @Test
+    void getBookingsWhenStateUnknown() {
+        AccessibilityErrorException exception = assertThrows(AccessibilityErrorException.class, () -> bookingService.getBookingsByUserId(1, "UNKNOWN", true, 1, 10));
+
+        assertEquals("Unknown state: UNKNOWN", exception.getMessage());
+    }
+
+    @Test
+    void getBookingsWhenBookingsIsEmpty() {
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> bookingService.getBookingsByUserId(1, "ALL", true, 1, 10));
+
+        assertEquals("Бронирований не найдено", exception.getMessage());
+    }
+
     @Test
     void createBookingWhenUserExistsItemExistsAndBookingDatesValid() {
         when(userRepository.findById(anyInt())).thenReturn(Optional.of(booker));

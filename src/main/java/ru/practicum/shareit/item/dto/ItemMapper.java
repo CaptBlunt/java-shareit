@@ -99,7 +99,9 @@ public class ItemMapper {
             dto.setNextBooking(null);
             return dto;
         }
+
         ItemResponse.ItemForOwner lastBookingDto = null;
+
         if (!pastBookings.isEmpty()) {
             Booking lastBooking = pastBookings.get(0);
             lastBookingDto = new ItemResponse.ItemForOwner();
