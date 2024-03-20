@@ -1,7 +1,6 @@
 package ru.practicum.shareit.item.dto;
 
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.UtilityClass;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.comments.dto.CommentResponse;
