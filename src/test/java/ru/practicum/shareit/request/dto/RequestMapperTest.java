@@ -3,14 +3,13 @@ package ru.practicum.shareit.request.dto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.practicum.shareit.item.dto.ItemForRequest;
-import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.request.model.Request;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class RequestMapperTest {
 
