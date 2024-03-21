@@ -11,6 +11,7 @@ import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.exception.AccessibilityErrorException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidateException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemRepository;
 import ru.practicum.shareit.user.model.User;
@@ -59,6 +60,14 @@ class BookingServiceImplTest {
             .name("Test")
             .description("Test")
             .owner(owner)
+            .available(true)
+            .build();
+
+    Item itemTwo = Item.builder()
+            .id(2)
+            .name("Test")
+            .description("Test")
+            .owner(booker)
             .available(true)
             .build();
 
@@ -114,6 +123,15 @@ class BookingServiceImplTest {
             .item(item)
             .build();
 
+    Booking bookingApproved = Booking.builder()
+            .id(1)
+            .start(LocalDateTime.now().plusDays(1))
+            .end(LocalDateTime.now().plusDays(3))
+            .status(BookingStatus.APPROVED)
+            .booker(booker)
+            .item(item)
+            .build();
+
     Booking newBooking = Booking.builder()
             .id(1)
             .start(LocalDateTime.now().plusDays(1))
@@ -123,6 +141,12 @@ class BookingServiceImplTest {
             .item(item)
             .build();
 
+
+    @Test
+    void paginationNotValid() {
+        ValidateException exception = assertThrows(ValidateException.class, () -> bookingService.getBookingsByUserId(1, "ALL", true, 0 , 0));
+        assertEquals("Проверьте указанные параметры", exception.getMessage());
+    }
     @Test
     void approveBooking() {
         when(bookingRepository.getReferenceById(anyInt())).thenReturn(bookingSaved);
@@ -134,6 +158,26 @@ class BookingServiceImplTest {
         Booking result = bookingService.approveOrReject(1, 2, "true");
 
         assertEquals(result, newBooking);
+    }
+
+    @Test
+    void approveBookingWhenUserNotOwner() {
+        when(bookingRepository.getReferenceById(anyInt())).thenReturn(bookingApproved);
+
+        when(itemRepository.getReferenceById(anyInt())).thenReturn(itemTwo);
+
+        AccessibilityErrorException exception = assertThrows(AccessibilityErrorException.class, () -> bookingService.approveOrReject(1, 1, "true"));
+        assertEquals("Статус нельзя изменить", exception.getMessage());
+    }
+
+    @Test
+    void approveBookingWhenStatusNotWaiting() {
+        when(bookingRepository.getReferenceById(anyInt())).thenReturn(bookingSaved);
+
+        when(itemRepository.getReferenceById(anyInt())).thenReturn(itemTwo);
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> bookingService.approveOrReject(1, 2, "true"));
+        assertEquals("Пользователь не является владельцем вещи", exception.getMessage());
     }
 
     @Test
