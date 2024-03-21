@@ -6,9 +6,11 @@ import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.comments.dto.CommentResponse;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.request.model.Request;
+import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,6 +36,39 @@ class ItemMapperTest {
         item.setComments(new ArrayList<>());
 
         ItemResponse result = itemMapper.itemResponseFromItemForUser(item, new ArrayList<>());
+
+        assertEquals(result.getId(), item.getId());
+        assertEquals(result.getDescription(), item.getDescription());
+    }
+
+    @Test
+    void itemForOwnerWhenBookingsExists() {
+        Item item = new Item();
+        item.setId(1);
+        item.setName("Test Item");
+        item.setDescription("Test Description");
+        item.setAvailable(true);
+        item.setComments(new ArrayList<>());
+
+        Booking bookingP = Booking.builder()
+                .id(1)
+                .booker(User.builder()
+                        .id(1)
+                        .build())
+                .build();
+
+        Booking bookingF = Booking.builder()
+                .id(2)
+                .booker(User.builder()
+                        .id(1)
+                        .build())
+                .build();
+
+        List<Booking> bookings = Collections.singletonList(bookingP);
+        List<Booking> bookingsF = Collections.singletonList(bookingF);
+        List<Booking> bookingsP = Collections.singletonList(bookingP);
+
+        ItemResponse result = itemMapper.itemForOwner(item, new ArrayList<>(), bookings, bookingsP, bookingsF);
 
         assertEquals(result.getId(), item.getId());
         assertEquals(result.getDescription(), item.getDescription());

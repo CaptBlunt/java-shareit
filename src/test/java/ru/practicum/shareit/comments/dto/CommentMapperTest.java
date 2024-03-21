@@ -41,7 +41,7 @@ class CommentMapperTest {
         assertEquals(comment.getText(), request.getText());
         assertEquals(comment.getAuthorName(), user);
         assertEquals(comment.getItem(), item);
-}
+    }
 
     @Test
     void commentResponseFromComment() {

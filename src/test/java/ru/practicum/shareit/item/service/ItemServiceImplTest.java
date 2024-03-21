@@ -56,7 +56,6 @@ class ItemServiceImplTest {
     private ItemMapper itemMapper;
 
 
-
     @Test
     void paginationNotValid() {
         ValidateException exception = assertThrows(ValidateException.class, () -> itemService.findByOwnerId(1, -1, 10));
@@ -315,7 +314,6 @@ class ItemServiceImplTest {
         assertEquals(updatedItem.getAvailable(), result.getAvailable());
         assertEquals(commentResponses.size(), result.getComments().size());
     }
-
 
 
     @Test
