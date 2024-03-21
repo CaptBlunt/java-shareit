@@ -42,6 +42,21 @@ class ItemMapperTest {
     }
 
     @Test
+    void itemFromItemResponse() {
+        ItemResponse itemResponse = new ItemResponse();
+        itemResponse.setId(1);
+        itemResponse.setName("Test Item");
+        itemResponse.setDescription("Test Description");
+        itemResponse.setAvailable(true);
+        itemResponse.setComments(new ArrayList<>());
+
+        Item item = itemMapper.itemFromItemResponse(itemResponse);
+
+        assertEquals(item.getId(), itemResponse.getId());
+        assertEquals(item.getDescription(), itemResponse.getDescription());
+    }
+
+    @Test
     void itemForOwnerWhenBookingsExists() {
         Item item = new Item();
         item.setId(1);
@@ -75,7 +90,7 @@ class ItemMapperTest {
     }
 
     @Test
-    void itemFromItemResponse() {
+    void itemResponseFromItem() {
         Item item = new Item();
         item.setId(1);
         item.setName("Test Item");
