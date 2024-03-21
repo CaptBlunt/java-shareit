@@ -149,6 +149,36 @@ class ItemControllerTest {
     }
 
     @Test
+    void getAllItemsByUserId() throws Exception {
+        Integer userId = 1;
+        Integer from = null;
+        Integer size = null;
+
+        List<Item> items = new ArrayList<>();
+
+        Item item = new Item();
+        item.setId(1);
+        item.setName("test");
+        items.add(item);
+
+        Item item1 = new Item();
+        item1.setId(2);
+        item1.setDescription("test1");
+        items.add(item1);
+
+        when(itemService.findByOwnerId(userId, from, size)).thenReturn(items);
+
+        mockMvc.perform(get("/items")
+                        .header("X-Sharer-User-Id", String.valueOf(userId)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].id", is(item.getId())))
+                .andExpect(jsonPath("$[1].id", is(item1.getId())))
+                .andExpect(jsonPath("$[1].description", is(item1.getDescription())));
+    }
+
+    @Test
     void getListItemsContainingStringInTheNameOrDescription() throws Exception {
         String text = "e";
         Integer userId = 1;
