@@ -24,8 +24,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -72,6 +71,45 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$.item.id", is(booking.getItem().getId())))
                 .andExpect(jsonPath("$.status", is(String.valueOf(booking.getStatus()))));
     }
+
+    @Test
+    void approvedBooking() throws Exception {
+        int userId = 2;
+        int bookingId = 1;
+        String approve = "true";
+
+        User owner = new User();
+        owner.setId(2);
+
+        Item newItem = new Item();
+        newItem.setId(1);
+        newItem.setName("test");
+        newItem.setDescription("test");
+        newItem.setAvailable(true);
+        newItem.setOwner(owner);
+
+        Booking booking = Booking.builder()
+                .id(1)
+                .status(BookingStatus.APPROVED)
+                .booker(User.builder()
+                        .id(1)
+                        .build())
+                .start(LocalDateTime.now().plusDays(1))
+                .end(LocalDateTime.now().plusDays(2))
+                .item(newItem)
+                .build();
+
+        when(bookingService.approveOrReject(bookingId, userId, "true")).thenReturn(booking);
+
+        mockMvc.perform(patch("/bookings/{bookingId}", bookingId)
+                        .header("X-Sharer-User-Id", String.valueOf(userId))
+                        .param("approved", approve))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andExpect(jsonPath("$.id", is(booking.getId())))
+                .andExpect(jsonPath("$.status", is(String.valueOf(booking.getStatus()))));
+    }
+
 
     @Test
     void createBookingWhenBookingValid() throws Exception {
