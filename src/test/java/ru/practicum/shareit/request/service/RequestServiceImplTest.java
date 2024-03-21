@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+//@MockitoSettings(strictness = Strictness.LENIENT)
 class RequestServiceImplTest {
 
     @InjectMocks
@@ -168,6 +169,7 @@ class RequestServiceImplTest {
         int from = 1;
         int size = 10;
 
+
         List<Request> requests = Collections.emptyList();
         PageRequest page = PageRequest.of(from / size, size);
 
@@ -176,7 +178,64 @@ class RequestServiceImplTest {
         List<Request> result = requestService.getAllRequests(userId, from, size);
 
         assertEquals(result, requests);
+    }
 
+    @Test
+    void getAllRequestsWhenRequestsExistsWithParameters() {
+        int userId = 1;
+        int from = 1;
+        int size = 10;
+
+        User requestor = User.builder()
+                .id(1)
+                .build();
+
+        Request request = Request.builder()
+                .id(1)
+                .description("Test")
+                .requestor(requestor)
+                .createdDate(LocalDateTime.now().minusDays(1))
+                .build();
+
+        Item item = Item.builder()
+                .id(1)
+                .name("dasd")
+                .description("dsad")
+                .available(true)
+                .request(request)
+                .build();
+
+        ItemForRequest request1 = ItemForRequest.builder()
+                .id(1)
+                .name("dasd")
+                .description("dasd")
+                .available(true)
+                .requestId(1)
+                .build();
+
+        List<ItemForRequest> itemForRequest = Collections.singletonList(request1);
+        List<Request> requests = Collections.singletonList(request);
+
+        PageRequest page = PageRequest.of(from / size, size);
+        RequestForUser requestForUser = RequestForUser.builder()
+                .id(1)
+                .description("dasd")
+                .items(itemForRequest)
+                .build();
+
+        List<RequestForUser> requestForUsers = Collections.singletonList(requestForUser);
+
+        when(requestRepository.findAllNotForCreator(eq(userId), eq(page))).thenReturn(requests);
+
+        when(itemRepository.findByRequestId(request.getId())).thenReturn(item);
+
+        when(itemMapper.itemForRequestFromItem(item)).thenReturn(request1);
+
+        when(requestMapper.requestForUser(request, itemForRequest)).thenReturn(requestForUser);
+
+        List<RequestForUser> result = requestService.getAllRequestForUser(userId, from, size);
+
+        assertEquals(result.get(0).getId(), requestForUsers.get(0).getId());
     }
 
     @Test
@@ -242,7 +301,7 @@ class RequestServiceImplTest {
         RequestForUser result = requestService.getRequestByIdForUser(requestId, userId);
 
         assertEquals(result.getId(), request.getId());
-        assertEquals(result.getDescription(),request.getDescription());
+        assertEquals(result.getDescription(), request.getDescription());
     }
 
     @Test
