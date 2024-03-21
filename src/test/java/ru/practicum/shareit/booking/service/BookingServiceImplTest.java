@@ -144,9 +144,10 @@ class BookingServiceImplTest {
 
     @Test
     void paginationNotValid() {
-        ValidateException exception = assertThrows(ValidateException.class, () -> bookingService.getBookingsByUserId(1, "ALL", true, 0 , 0));
+        ValidateException exception = assertThrows(ValidateException.class, () -> bookingService.getBookingsByUserId(1, "ALL", true, 0, 0));
         assertEquals("Проверьте указанные параметры", exception.getMessage());
     }
+
     @Test
     void approveBooking() {
         when(bookingRepository.getReferenceById(anyInt())).thenReturn(bookingSaved);
