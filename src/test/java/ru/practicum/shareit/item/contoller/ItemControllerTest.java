@@ -8,6 +8,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.practicum.shareit.comments.dto.CommentMapper;
+import ru.practicum.shareit.comments.dto.CommentRequest;
+import ru.practicum.shareit.comments.dto.CommentResponse;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemRequest;
 import ru.practicum.shareit.item.dto.ItemResponse;
@@ -16,6 +19,7 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemServiceImpl;
 import ru.practicum.shareit.user.model.User;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,6 +42,9 @@ class ItemControllerTest {
     private ObjectMapper objectMapper;
     @MockBean
     private ItemServiceImpl itemService;
+
+    @MockBean
+    private CommentMapper commentMapper;
 
     @Test
     void getItemById() throws Exception {
@@ -183,5 +190,34 @@ class ItemControllerTest {
         mockMvc.perform(delete("/items/{id}", itemId)
                         .header("X-Sharer-User-Id", String.valueOf(anyInt())))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void addComment() throws Exception {
+        Integer userId = 2;
+        int itemId = 2;
+
+        CommentRequest request = CommentRequest.builder()
+                .text("dasd")
+                .build();
+
+        CommentResponse response = CommentResponse.builder()
+                .id(1)
+                .authorName("dad")
+                .text("dasd")
+                .created(LocalDateTime.now())
+                .build();
+
+        when(commentMapper.commentResponse(itemService.addComment(itemId, commentMapper.commentForCreate(request), userId))).thenReturn(response);
+
+        mockMvc.perform(post("/items/{id}/comment", itemId, request)
+                        .header("X-Sharer-User-Id", String.valueOf(userId))
+                        .content(objectMapper.writeValueAsString(request))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andExpect(jsonPath("$.id", is(response.getId())))
+                .andExpect(jsonPath("$.authorName", is(response.getAuthorName())))
+                .andExpect(jsonPath("$.text", is(response.getText())));
     }
 }
