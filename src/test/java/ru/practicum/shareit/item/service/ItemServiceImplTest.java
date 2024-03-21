@@ -270,7 +270,6 @@ class ItemServiceImplTest {
 
     @Test
     void updateItemWhenCommentsNotEmpty() {
-
         User author = User.builder()
                 .id(1)
                 .email("dsad2@dsa.com")
@@ -316,6 +315,8 @@ class ItemServiceImplTest {
         assertEquals(updatedItem.getAvailable(), result.getAvailable());
         assertEquals(commentResponses.size(), result.getComments().size());
     }
+
+
 
     @Test
     void getItemByIdWhenLastBookingAndNextBookingId() {
@@ -628,6 +629,61 @@ class ItemServiceImplTest {
         assertEquals(itemsResult.size(), items.size());
         assertEquals(itemsResult.get(0), items.get(0));
         assertEquals(itemsResult.get(1), items.get(1));
+    }
+
+    @Test
+    void searchItemsBySubstringWhenSubstringTesAndCommentsExists() {
+        Item itemOne = new Item();
+        itemOne.setId(1);
+        itemOne.setName("Test Item");
+        itemOne.setDescription("Test Description");
+        itemOne.setAvailable(true);
+
+        Item itemTwo = new Item();
+        itemTwo.setId(2);
+        itemTwo.setName("Test Item2");
+        itemTwo.setDescription("Test Description2");
+        itemTwo.setAvailable(true);
+
+        User author = new User();
+        author.setId(1);
+
+        Comment comment = Comment.builder()
+                .id(1)
+                .text("dadas")
+                .item(itemTwo)
+                .authorName(author)
+                .created(LocalDateTime.of(2024, 3, 19, 0, 0))
+                .build();
+
+        CommentResponse response = CommentResponse.builder()
+                .id(1)
+                .text("dadas")
+                .authorName(author.getName())
+                .created(LocalDateTime.of(2024, 3, 19, 0, 0))
+                .build();
+
+        List<CommentResponse> commentResponses = Collections.singletonList(response);
+
+        List<Item> items = Arrays.asList(itemTwo);
+
+        List<Comment> comments = Collections.singletonList(comment);
+
+        PageRequest page = PageRequest.of(1 / 10, 10);
+
+        when(itemRepository.findByNameContainingOrDescriptionContainingIgnoreCase("tes", "tes", page)).thenReturn(items);
+        when(commentRepository.findByItemIdAndOwnerId(anyInt())).thenReturn(comments);
+
+        when(userRepository.getReferenceById(author.getId())).thenReturn(author);
+
+        when(commentMapper.commentResponseFromComment(comment, author.getName())).thenReturn(response);
+
+        when(itemMapper.itemFromItemResponse(itemMapper.itemResponseFromItemForUser(itemTwo, commentResponses))).thenReturn(itemTwo);
+
+        List<Item> itemsResult = itemService.searchBySubstring("tes", "tes", 0, 10);
+
+        assertEquals(itemsResult.size(), items.size());
+        assertEquals(itemsResult.get(0), items.get(0));
     }
 
     @Test
