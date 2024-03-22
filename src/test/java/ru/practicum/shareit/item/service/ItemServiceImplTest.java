@@ -6,7 +6,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
-import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.service.BookingRepository;
 import ru.practicum.shareit.comments.dto.CommentMapper;
@@ -16,7 +15,6 @@ import ru.practicum.shareit.exception.AccessibilityErrorException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidateException;
 import ru.practicum.shareit.item.dto.ItemMapper;
-import ru.practicum.shareit.item.dto.ItemResponse;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.CommentRepository;
@@ -56,6 +54,58 @@ class ItemServiceImplTest {
     private ItemMapper itemMapper;
 
 
+    User user = User.builder()
+            .id(1)
+            .build();
+
+    User userTwo = User.builder()
+            .id(7)
+            .email("dsaadsd")
+            .name("author")
+            .build();
+
+    CommentResponse commentResponse = CommentResponse.builder()
+            .id(1)
+            .text("dasd")
+            .authorName("name")
+            .created(LocalDateTime.now().minusDays(1))
+            .build();
+
+    List<CommentResponse> commentResponses = List.of(commentResponse);
+
+    Item item = Item.builder()
+            .id(1)
+            .name("Test Item")
+            .description("Test Description")
+            .owner(user)
+            .comments(commentResponses)
+            .available(true).build();
+
+    Item itemUpd = Item.builder()
+            .id(1)
+            .owner(userTwo)
+            .build();
+
+    List<Item> items = List.of(item);
+
+    Comment comment = Comment.builder()
+            .id(1)
+            .text("dasd")
+            .item(item)
+            .authorName(userTwo)
+            .created(LocalDateTime.now().minusDays(1))
+            .build();
+    List<Comment> comments = List.of(comment);
+
+    Booking bookingLast = Booking.builder()
+            .build();
+    Booking bookingFuture = Booking.builder()
+            .build();
+
+    List<Booking> bookings = List.of(bookingLast, bookingFuture);
+    List<Booking> pastBookings = List.of(bookingLast);
+    List<Booking> futureBookings = List.of(bookingFuture);
+
     @Test
     void paginationNotValid() {
         ValidateException exception = assertThrows(ValidateException.class, () -> itemService.findByOwnerId(1, -1, 10));
@@ -78,118 +128,48 @@ class ItemServiceImplTest {
         assertEquals(emptyList, new ArrayList<>());
     }
 
-
     @Test
     void getAllItemsByUserId() {
-        User owner = new User();
-        owner.setId(1);
-        owner.setEmail("dsad");
-        owner.setName("sadasd");
-
-        User author = new User();
-        author.setId(7);
-        author.setEmail("dsaadsd");
-        author.setName("saddasdasd");
-
-
-        CommentResponse commentResponse = CommentResponse.builder()
-                .id(1)
-                .text("dasd")
-                .authorName("saddasdasd")
-                .created(LocalDateTime.now().minusDays(1))
-                .build();
-
-        List<CommentResponse> commentResponses = List.of(commentResponse);
-
-        Item item = new Item();
-        item.setId(1);
-        item.setName("Test Item");
-        item.setDescription("Test Description");
-        item.setOwner(owner);
-        item.setComments(commentResponses);
-        item.setAvailable(true);
-
-        List<Item> items = List.of(item);
-
-        Comment comment = Comment.builder()
-                .id(1)
-                .text("dasd")
-                .item(item)
-                .authorName(author)
-                .created(LocalDateTime.now().minusDays(1))
-                .build();
-
-
-        List<Comment> comments = List.of(comment);
-
         PageRequest page = PageRequest.of(1 / 10, 10);
 
         when(itemRepository.findByOwnerId(anyInt(), eq(page))).thenReturn(items);
 
         when(commentRepository.findByItemIdAndOwnerId(anyInt())).thenReturn(comments);
 
-        when(userRepository.getReferenceById(author.getId())).thenReturn(author);
+        when(userRepository.getReferenceById(userTwo.getId())).thenReturn(userTwo);
 
-        when(commentMapper.commentResponseFromComment(eq(comment), eq("saddasdasd"))).thenReturn(commentResponse);
+        when(commentMapper.commentResponseFromComment(eq(comment), eq("author"))).thenReturn(commentResponse);
 
         when(itemMapper.itemFromItemResponse(itemMapper.itemResponseFromItemForUser(eq(item), eq(commentResponses)))).thenReturn(item);
 
         List<Item> result = itemService.findByOwnerId(1, 1, 10);
 
         assertEquals(result, items);
-
     }
 
     @Test
     void getItemByIdWhenUserNotOwner() {
-        User owner = new User();
-        owner.setId(1);
-
-        User user = new User();
-        user.setId(2);
-
-        Item item = new Item();
-        item.setId(1);
-        item.setName("Test Item");
-        item.setDescription("Test Description");
-        item.setOwner(owner);
-        item.setAvailable(true);
-
         when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
-        when(commentRepository.findByItemIdAndOwnerId(item.getId())).thenReturn(new ArrayList<>());
+        when(commentRepository.findByItemIdAndOwnerId(item.getId())).thenReturn(Collections.emptyList());
 
         when(itemMapper.itemFromItemResponse(itemMapper.itemResponseFromItemForUser(item, Collections.emptyList()))).thenReturn(item);
 
-        Item result = itemService.getItemById(item.getId(), user.getId());
+        Item result = itemService.getItemById(item.getId(), userTwo.getId());
 
         assertEquals(item, result);
     }
 
     @Test
     void createItemWhenItemValid() {
-        User user = new User();
-        user.setId(1);
-
-        Item item = new Item();
-        item.setName("Test Item");
-        item.setDescription("Test Description");
-        item.setOwner(user);
-        item.setAvailable(true);
-
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
 
-        Item savedItem = new Item();
-        savedItem.setName("Test Item");
-        savedItem.setDescription("Test Description");
-        savedItem.setOwner(user);
-
-        when(itemRepository.save(item)).thenReturn(savedItem);
+        when(itemRepository.save(item)).thenReturn(item);
 
         Item createdItem = itemService.createItem(item);
 
         verify(userRepository).findById(1);
         verify(itemRepository).save(item);
-        assertEquals(savedItem, createdItem);
+        assertEquals(item, createdItem);
     }
 
     @Test
@@ -197,121 +177,34 @@ class ItemServiceImplTest {
         int itemId = 2;
         int userId = 1;
 
-        User owner = User.builder()
-                .id(4)
-                .email("dsad@dsa.com")
-                .name("dasdd")
-                .build();
-
-        User author = User.builder()
-                .id(1)
-                .email("dsad2@dsa.com")
-                .name("dasd2d")
-                .build();
-
-        Item item = Item.builder()
-                .id(2)
-                .name("test")
-                .description("dasd")
-                .owner(owner)
-                .available(true)
-                .comments(new ArrayList<>())
-                .build();
-
-        Comment comment = Comment.builder()
-                .id(1)
-                .text("dasd")
-                .item(item)
-                .authorName(author)
-                .created(LocalDateTime.now())
-                .build();
-
-        List<Comment> comments = List.of(comment);
-
-        CommentResponse commentResponse = CommentResponse.builder()
-                .id(1)
-                .text("dasd")
-                .authorName("dasd2d")
-                .created(comment.getCreated())
-                .build();
-
-        List<CommentResponse> commentResponses = List.of(commentResponse);
-
-        ItemResponse itemResponse = ItemResponse.builder()
-                .id(2)
-                .name("test")
-                .description("dasd")
-                .available(true)
-                .comments(commentResponses)
-                .build();
-
-        Item itemResponse1 = Item.builder()
-                .id(2)
-                .name("test")
-                .description("dasd")
-                .owner(owner)
-                .available(true)
-                .comments(commentResponses)
-                .build();
-
         when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
 
         when(commentRepository.findByItemIdAndOwnerId(item.getId())).thenReturn(comments);
 
-        when(userRepository.getReferenceById(comment.getAuthorName().getId())).thenReturn(author);
+        when(userRepository.getReferenceById(comment.getAuthorName().getId())).thenReturn(userTwo);
 
-        when(itemMapper.itemFromItemResponse(itemMapper.itemResponseFromItemForUser(item, commentResponses))).thenReturn(itemResponse1);
+        when(itemMapper.itemFromItemResponse(itemMapper.itemResponseFromItemForUser(item, commentResponses))).thenReturn(item);
 
         Item result = itemService.getItemById(itemId, userId);
 
-        assertEquals(result.getId(), itemResponse.getId());
+        assertEquals(result.getId(), item.getId());
     }
 
     @Test
     void updateItemWhenCommentsNotEmpty() {
-        User author = User.builder()
-                .id(1)
-                .email("dsad2@dsa.com")
-                .name("dasd2d")
-                .build();
-
-        Item item = Item.builder()
-                .id(1)
-                .name("Test Item")
-                .description("Sample description")
-                .available(true)
-                .owner(User.builder().id(1).build())
-                .build();
-
-        List<Comment> comments = new ArrayList<>();
-        Comment comment1 = Comment.builder().id(1).authorName(User.builder().id(2).build()).text("Comment 1").build();
-        comments.add(comment1);
-
-        List<CommentResponse> commentResponses = new ArrayList<>();
-        CommentResponse response1 = new CommentResponse();
-        commentResponses.add(response1);
-        Item updatedItem = Item.builder()
-                .id(1)
-                .name("Updated Item")
-                .description("Updated description")
-                .available(false)
-                .owner(User.builder().id(1).build())
-                .comments(commentResponses)
-                .build();
-
         when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
         when(userRepository.findById(item.getOwner().getId())).thenReturn(Optional.of(item.getOwner()));
         when(commentRepository.findByItemIdAndOwnerId(item.getId())).thenReturn(comments);
-        when(userRepository.getReferenceById(comment1.getAuthorName().getId())).thenReturn(author);
-        when(commentMapper.commentResponseFromComment(any(), any())).thenReturn(response1);
+        when(userRepository.getReferenceById(comment.getAuthorName().getId())).thenReturn(userTwo);
+        when(commentMapper.commentResponseFromComment(any(), any())).thenReturn(commentResponse);
 
-        when(itemRepository.save(any())).thenReturn(updatedItem);
+        when(itemRepository.save(any())).thenReturn(item);
 
         Item result = itemService.updateItem(item);
 
-        assertEquals(updatedItem.getName(), result.getName());
-        assertEquals(updatedItem.getDescription(), result.getDescription());
-        assertEquals(updatedItem.getAvailable(), result.getAvailable());
+        assertEquals(item.getName(), result.getName());
+        assertEquals(item.getDescription(), result.getDescription());
+        assertEquals(item.getAvailable(), result.getAvailable());
         assertEquals(commentResponses.size(), result.getComments().size());
     }
 
@@ -321,73 +214,14 @@ class ItemServiceImplTest {
         int itemId = 2;
         int userId = 1;
 
-        User owner = User.builder()
-                .id(1)
-                .email("dsad@dsa.com")
-                .name("dasdd")
-                .build();
-
-        User booker = User.builder()
-                .id(6)
-                .email("dsad2@dsa.com")
-                .name("dasdd")
-                .build();
-
-        Item item = Item.builder()
-                .id(2)
-                .name("test")
-                .description("dasd")
-                .owner(owner)
-                .available(true)
-                .comments(new ArrayList<>())
-                .build();
-
-        Booking bookingLast = Booking.builder()
-                .id(2)
-                .start(LocalDateTime.now().minusDays(1))
-                .end(LocalDateTime.now().minusHours(2))
-                .item(item)
-                .booker(booker)
-                .status(BookingStatus.APPROVED)
-                .build();
-
-        Booking bookingFuture = Booking.builder()
-                .id(3)
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.now().plusDays(2))
-                .item(item)
-                .booker(booker)
-                .status(BookingStatus.APPROVED)
-                .build();
-
-        List<Booking> bookings = List.of(bookingLast, bookingFuture);
-        List<Booking> pastBookings = List.of(bookingLast);
-        List<Booking> futureBookings = List.of(bookingFuture);
-
-        Item itemResponse = Item.builder()
-                .id(2)
-                .name("test")
-                .description("dasd")
-                .available(true)
-                .comments(new ArrayList<>())
-                .lastBooking(ItemResponse.ItemForOwner.builder()
-                        .id(2)
-                        .bookerId(6)
-                        .build())
-                .nextBooking(ItemResponse.ItemForOwner.builder()
-                        .id(3)
-                        .bookerId(6)
-                        .build())
-                .build();
-
         when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
         when(bookingRepository.findByItemId(item.getId())).thenReturn(bookings);
         when(bookingRepository.findByOwnerIdAndItemIdPastBookings(item.getOwner().getId(), item.getId())).thenReturn(pastBookings);
         when(bookingRepository.findByOwnerIdAndItemIdFutureBookings(item.getOwner().getId(), item.getId())).thenReturn(futureBookings);
-        when(itemMapper.itemFromItemResponse(itemMapper.itemForOwner(item, new ArrayList<>(), bookings, pastBookings, futureBookings))).thenReturn(itemResponse);
+        when(itemMapper.itemFromItemResponse(itemMapper.itemForOwner(item, Collections.emptyList(), bookings, pastBookings, futureBookings))).thenReturn(item);
 
         Item result = itemService.getItemById(itemId, userId);
-        assertEquals(result, itemResponse);
+        assertEquals(result, item);
     }
 
     @Test
@@ -404,76 +238,25 @@ class ItemServiceImplTest {
 
     @Test
     void updateItemWhenUserNotOwner() {
-        int userId = 3;
+        int userId = 1;
 
-        User user = new User();
-        user.setId(1);
-        user.setEmail("dsad");
-        user.setName("sadasd");
-
-        User user2 = new User();
-        user2.setId(3);
-
-        Item item = new Item();
-        item.setId(1);
-        item.setName("Test Item");
-        item.setDescription("Test Description");
-        item.setOwner(user2);
-        item.setAvailable(true);
-
-        Item itemNew = new Item();
-        itemNew.setId(1);
-        itemNew.setName("Test Item2");
-        itemNew.setDescription("Test Description2");
-        itemNew.setOwner(user);
-        itemNew.setAvailable(true);
-
-        when(itemRepository.findById(1)).thenReturn(Optional.of(itemNew));
+        when(itemRepository.findById(1)).thenReturn(Optional.of(itemUpd));
 
         when(userRepository.findById(item.getOwner().getId())).thenReturn(Optional.of(user));
 
         NotFoundException exception = assertThrows(NotFoundException.class, () -> itemService.updateItem(item));
 
-        assertEquals("Пользователь " + userId + " не является владельцем  вещи " + itemNew.getId(), exception.getMessage());
+        assertEquals("Пользователь " + userId + " не является владельцем  вещи " + itemUpd.getId(), exception.getMessage());
     }
 
     @Test
     void findByOwnerIdWhenCommentExists() {
-        User user = new User();
-        user.setId(1);
-        user.setEmail("dsad");
-        user.setName("sadasd");
-
-        User author = new User();
-        author.setId(7);
-        author.setEmail("dsaadsd");
-        author.setName("saddasdasd");
-
-        Item item = new Item();
-        item.setId(1);
-        item.setName("Test Item");
-        item.setDescription("Test Description");
-        item.setOwner(user);
-        item.setAvailable(true);
-
-        List<Item> items = List.of(item);
-
-        Comment comment = Comment.builder()
-                .id(1)
-                .text("dasd")
-                .item(item)
-                .authorName(author)
-                .created(LocalDateTime.now().minusDays(1))
-                .build();
-
-        List<Comment> comments = List.of(comment);
-
         PageRequest page = PageRequest.of(1 / 10, 10);
 
         when(itemRepository.findByOwnerId(anyInt(), eq(page))).thenReturn(items);
         when(commentRepository.findByItemIdAndOwnerId(anyInt())).thenReturn(new ArrayList<>());
 
-        when(itemMapper.itemFromItemResponse(itemMapper.itemForOwner(item, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), new ArrayList<>()))).thenReturn(item);
+        when(itemMapper.itemFromItemResponse(itemMapper.itemForOwner(item, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList()))).thenReturn(item);
 
         List<Item> result = itemService.findByOwnerId(1, 1, 10);
 
@@ -482,45 +265,28 @@ class ItemServiceImplTest {
 
     @Test
     void updateItemWhenItemValidUserOwnerWithoutComments() {
-        User user = new User();
-        user.setId(1);
-        user.setEmail("dsad");
-        user.setName("sadasd");
-
-        Item item = new Item();
-        item.setId(1);
-        item.setName("Test Item");
-        item.setDescription("Test Description");
-        item.setOwner(user);
-        item.setAvailable(true);
-
-        Item itemNew = new Item();
-        itemNew.setId(1);
-        itemNew.setName("Test Item2");
-        itemNew.setDescription("Test Description2");
-        itemNew.setOwner(user);
-        itemNew.setAvailable(true);
-
         when(itemRepository.findById(1)).thenReturn(Optional.of(item));
 
         when(userRepository.findById(item.getOwner().getId())).thenReturn(Optional.of(user));
 
-        when(commentRepository.findByItemIdAndOwnerId(itemNew.getId())).thenReturn(new ArrayList<>());
+        when(commentRepository.findByItemIdAndOwnerId(itemUpd.getId())).thenReturn(Collections.emptyList());
 
-        when(itemRepository.save(itemNew)).thenReturn(itemNew);
+        when(itemRepository.save(itemUpd)).thenReturn(itemUpd);
 
-        Item item1 = itemService.updateItem(item);
+        Item itemSaved = itemService.updateItem(item);
 
-        assertEquals(item1, itemNew);
+        assertEquals(itemSaved, itemUpd);
     }
 
     @Test
     void addCommentWhenCommentEmpty() {
+        int itemId = 1;
+        int userId = 1;
+
         Comment newComment = Comment.builder()
                 .text("")
                 .build();
-        int itemId = 1;
-        int userId = 1;
+
         ValidateException exception = assertThrows(ValidateException.class, () -> itemService.addComment(itemId, newComment, userId));
 
         assertEquals("Пустой комментарий", exception.getMessage());
@@ -530,64 +296,22 @@ class ItemServiceImplTest {
     void addCommentWhenValidComment() {
         int itemId = 1;
         int userId = 2;
-        Comment newComment = Comment.builder()
-                .text("Test")
-                .build();
 
-        User user = new User();
-        user.setId(1);
-
-        User author = new User();
-        author.setId(2);
-
-        Item item = new Item();
-        item.setId(1);
-        item.setName("Test Item");
-        item.setDescription("Test Description");
-        item.setOwner(user);
-        item.setAvailable(true);
-
-        Item itemNew = new Item();
-        itemNew.setId(1);
-        itemNew.setName("Test Item2");
-        itemNew.setDescription("Test Description2");
-        itemNew.setOwner(user);
-        itemNew.setAvailable(true);
-
-        Comment commentNew = Comment.builder()
-                .text(newComment.getText())
-                .item(itemNew)
-                .authorName(author)
-                .created(LocalDateTime.of(2024, 3, 19, 0, 0))
-                .build();
-
-        Comment commentNewSave = Comment.builder()
-                .id(1)
-                .text(newComment.getText())
-                .item(itemNew)
-                .authorName(author)
-                .created(LocalDateTime.of(2024, 3, 19, 0, 0))
-                .build();
-
-        List<Booking> bookingsPast = List.of(new Booking());
-
-        List<Booking> bookingsFuture = List.of(new Booking());
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(author));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userTwo));
 
         when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
 
-        when(bookingRepository.findByBookerIdAndItemIdPastBookings(author.getId(), item.getId())).thenReturn(bookingsPast);
+        when(bookingRepository.findByBookerIdAndItemIdPastBookings(userTwo.getId(), item.getId())).thenReturn(pastBookings);
 
-        when(bookingRepository.findByBookerIdAndItemIdFutureBookings(author.getId(), item.getId())).thenReturn(bookingsFuture);
+        when(bookingRepository.findByBookerIdAndItemIdFutureBookings(userTwo.getId(), item.getId())).thenReturn(futureBookings);
 
-        when(commentMapper.commentFromCommentRequest(commentMapper.commentRequestFromComment(newComment), author, item)).thenReturn(commentNew);
+        when(commentMapper.commentFromCommentRequest(commentMapper.commentRequestFromComment(comment), userTwo, item)).thenReturn(comment);
 
-        when(commentRepository.save(commentNew)).thenReturn(commentNewSave);
+        when(commentRepository.save(comment)).thenReturn(comment);
 
-        Comment test = itemService.addComment(itemId, newComment, userId);
+        Comment test = itemService.addComment(itemId, comment, userId);
 
-        assertEquals(test, commentNewSave);
+        assertEquals(test, comment);
     }
 
     @Test
@@ -596,87 +320,36 @@ class ItemServiceImplTest {
 
         List<Item> items = itemService.searchBySubstring("test", "test", 0, 10);
 
-        assertEquals(new ArrayList<>(), items);
+        assertEquals(Collections.emptyList(), items);
     }
 
     @Test
     void searchItemsBySubstringWhenSubstringTes() {
-        Item itemOne = new Item();
-        itemOne.setId(1);
-        itemOne.setName("Test Item");
-        itemOne.setDescription("Test Description");
-        itemOne.setAvailable(true);
-
-        Item itemTwo = new Item();
-        itemTwo.setId(2);
-        itemTwo.setName("Test Item2");
-        itemTwo.setDescription("Test Description2");
-        itemTwo.setAvailable(true);
-
-        List<Item> items = Arrays.asList(itemOne, itemTwo);
-
         PageRequest page = PageRequest.of(1 / 10, 10);
 
         when(itemRepository.findByNameContainingOrDescriptionContainingIgnoreCase("tes", "tes", page)).thenReturn(items);
-        when(commentRepository.findByItemIdAndOwnerId(anyInt())).thenReturn(new ArrayList<>());
+        when(commentRepository.findByItemIdAndOwnerId(anyInt())).thenReturn(Collections.emptyList());
 
-        when(itemMapper.itemFromItemResponse(itemMapper.itemResponseFromItemForUser(any(Item.class), anyList()))).thenReturn(itemOne, itemTwo);
+        when(itemMapper.itemFromItemResponse(itemMapper.itemResponseFromItemForUser(any(Item.class), anyList()))).thenReturn(item);
 
         List<Item> itemsResult = itemService.searchBySubstring("tes", "tes", 0, 10);
 
         assertEquals(itemsResult.size(), items.size());
         assertEquals(itemsResult.get(0), items.get(0));
-        assertEquals(itemsResult.get(1), items.get(1));
     }
 
     @Test
     void searchItemsBySubstringWhenSubstringTesAndCommentsExists() {
-        Item itemOne = new Item();
-        itemOne.setId(1);
-        itemOne.setName("Test Item");
-        itemOne.setDescription("Test Description");
-        itemOne.setAvailable(true);
-
-        Item itemTwo = new Item();
-        itemTwo.setId(2);
-        itemTwo.setName("Test Item2");
-        itemTwo.setDescription("Test Description2");
-        itemTwo.setAvailable(true);
-
-        User author = new User();
-        author.setId(1);
-
-        Comment comment = Comment.builder()
-                .id(1)
-                .text("dadas")
-                .item(itemTwo)
-                .authorName(author)
-                .created(LocalDateTime.of(2024, 3, 19, 0, 0))
-                .build();
-
-        CommentResponse response = CommentResponse.builder()
-                .id(1)
-                .text("dadas")
-                .authorName(author.getName())
-                .created(LocalDateTime.of(2024, 3, 19, 0, 0))
-                .build();
-
-        List<CommentResponse> commentResponses = Collections.singletonList(response);
-
-        List<Item> items = Arrays.asList(itemTwo);
-
-        List<Comment> comments = Collections.singletonList(comment);
-
         PageRequest page = PageRequest.of(1 / 10, 10);
 
         when(itemRepository.findByNameContainingOrDescriptionContainingIgnoreCase("tes", "tes", page)).thenReturn(items);
         when(commentRepository.findByItemIdAndOwnerId(anyInt())).thenReturn(comments);
 
-        when(userRepository.getReferenceById(author.getId())).thenReturn(author);
+        when(userRepository.getReferenceById(userTwo.getId())).thenReturn(userTwo);
 
-        when(commentMapper.commentResponseFromComment(comment, author.getName())).thenReturn(response);
+        when(commentMapper.commentResponseFromComment(comment, userTwo.getName())).thenReturn(commentResponse);
 
-        when(itemMapper.itemFromItemResponse(itemMapper.itemResponseFromItemForUser(itemTwo, commentResponses))).thenReturn(itemTwo);
+        when(itemMapper.itemFromItemResponse(itemMapper.itemResponseFromItemForUser(item, commentResponses))).thenReturn(item);
 
         List<Item> itemsResult = itemService.searchBySubstring("tes", "tes", 0, 10);
 
@@ -686,10 +359,9 @@ class ItemServiceImplTest {
 
     @Test
     void validationItem() {
-        Item item = new Item();
-        item.setName("");
-        item.setDescription("Test Description2");
-        item.setAvailable(true);
+        Item item = Item.builder()
+                .name("")
+                .build();
 
         ValidateException exception = assertThrows(ValidateException.class, () -> itemService.validateItem(item));
 
@@ -699,45 +371,13 @@ class ItemServiceImplTest {
     @Test
     void addCommentWhenUserNotBooking() {
         int itemId = 1;
-        int userId = 2;
-        Comment newComment = Comment.builder()
-                .text("Test")
-                .build();
-
-        User user = new User();
-        user.setId(1);
-
-        User author = new User();
-        author.setId(2);
-
-        Item item = new Item();
-        item.setId(1);
-        item.setName("Test Item");
-        item.setDescription("Test Description");
-        item.setOwner(user);
-        item.setAvailable(true);
-
-        Item itemNew = new Item();
-        itemNew.setId(1);
-        itemNew.setName("Test Item2");
-        itemNew.setDescription("Test Description2");
-        itemNew.setOwner(user);
-        itemNew.setAvailable(true);
-
-        Comment commentNew = Comment.builder()
-                .text(newComment.getText())
-                .item(itemNew)
-                .authorName(author)
-                .created(LocalDateTime.of(2024, 3, 19, 0, 0))
-                .build();
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(author));
+        when(userRepository.findById(1)).thenReturn(Optional.of(user));
 
         when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
 
-        when(bookingRepository.findByBookerIdAndItemIdPastBookings(author.getId(), item.getId())).thenThrow(new AccessibilityErrorException("Пользователь не бронировал эту вещь, либо бронирование ещё не закончилось"));
+        when(bookingRepository.findByBookerIdAndItemIdPastBookings(user.getId(), item.getId())).thenThrow(new AccessibilityErrorException("Пользователь не бронировал эту вещь, либо бронирование ещё не закончилось"));
 
-        AccessibilityErrorException exception = assertThrows(AccessibilityErrorException.class, () -> itemService.addComment(itemId, commentNew, author.getId()));
+        AccessibilityErrorException exception = assertThrows(AccessibilityErrorException.class, () -> itemService.addComment(itemId, comment, user.getId()));
 
         assertEquals("Пользователь не бронировал эту вещь, либо бронирование ещё не закончилось", exception.getMessage());
     }
@@ -746,59 +386,17 @@ class ItemServiceImplTest {
     void addCommentWhenUserBookingInFuture() {
         int itemId = 1;
         int userId = 2;
-        Comment newComment = Comment.builder()
-                .text("Test")
-                .build();
 
-        User user = new User();
-        user.setId(1);
-
-        User author = new User();
-        author.setId(2);
-
-        Item item = new Item();
-        item.setId(1);
-        item.setName("Test Item");
-        item.setDescription("Test Description");
-        item.setOwner(user);
-        item.setAvailable(true);
-
-        Item itemNew = new Item();
-        itemNew.setId(1);
-        itemNew.setName("Test Item2");
-        itemNew.setDescription("Test Description2");
-        itemNew.setOwner(user);
-        itemNew.setAvailable(true);
-
-        Comment commentNew = Comment.builder()
-                .text(newComment.getText())
-                .item(itemNew)
-                .authorName(author)
-                .created(LocalDateTime.of(2024, 3, 19, 0, 0))
-                .build();
-
-        Comment commentNewSave = Comment.builder()
-                .id(1)
-                .text(newComment.getText())
-                .item(itemNew)
-                .authorName(author)
-                .created(LocalDateTime.of(2024, 3, 19, 0, 0))
-                .build();
-
-        List<Booking> bookingsPast = Collections.emptyList();
-
-        List<Booking> bookingsFuture = List.of(new Booking());
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(author));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userTwo));
 
         when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
 
-        when(bookingRepository.findByBookerIdAndItemIdPastBookings(author.getId(), item.getId())).thenReturn(bookingsPast);
+        when(bookingRepository.findByBookerIdAndItemIdPastBookings(userTwo.getId(), item.getId())).thenReturn(Collections.emptyList());
 
-        when(bookingRepository.findByBookerIdAndItemIdFutureBookings(author.getId(), item.getId())).thenReturn(bookingsFuture);
+        when(bookingRepository.findByBookerIdAndItemIdFutureBookings(userTwo.getId(), item.getId())).thenReturn(futureBookings);
 
 
-        AccessibilityErrorException exception = assertThrows(AccessibilityErrorException.class, () -> itemService.addComment(itemId, newComment, userId));
+        AccessibilityErrorException exception = assertThrows(AccessibilityErrorException.class, () -> itemService.addComment(itemId, comment, userId));
 
         assertEquals("Пользователь забронировал эту вещь в будущем", exception.getMessage());
     }

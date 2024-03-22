@@ -17,12 +17,12 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -38,32 +38,99 @@ class BookingControllerTest {
     @MockBean
     private BookingServiceImpl bookingService;
 
+    Item item = Item.builder()
+            .id(1)
+            .build();
+    Booking booking = Booking.builder()
+            .id(1)
+            .status(BookingStatus.APPROVED)
+            .booker(User.builder()
+                    .id(1)
+                    .build())
+            .start(LocalDateTime.now().plusDays(1))
+            .end(LocalDateTime.now().plusDays(2))
+            .item(item)
+            .build();
+
+    Booking bookingForGet = Booking.builder()
+            .id(1)
+            .start(LocalDateTime.now().plusDays(1))
+            .end(LocalDateTime.now().plusDays(2))
+            .item(Item.builder()
+                    .id(1)
+                    .owner(User.builder()
+                            .id(1)
+                            .build())
+                    .available(true)
+                    .build())
+            .booker(User.builder()
+                    .id(2)
+                    .build())
+            .status(BookingStatus.WAITING)
+            .build();
+
+    List<Booking> bookings = List.of(booking, bookingForGet);
+
+    BookingRequest bookingRequestForCreate = BookingRequest.builder()
+            .itemId(1)
+            .build();
+
+    BookingRequest bookingRequestNotValidDate = BookingRequest.builder()
+            .itemId(1)
+            .start(LocalDateTime.now().minusDays(1))
+            .end(LocalDateTime.now().minusDays(3))
+            .build();
+
+    Booking bookingReqNotValidDate = Booking.builder()
+            .start(LocalDateTime.now().minusDays(1))
+            .end(LocalDateTime.now().minusDays(3))
+            .build();
+
     @Test
-    void getBookingByIdForOwnerItem() throws Exception {
+    void getBookingByIdForOwnerOrBooker() throws Exception {
         Integer bookingId = 1;
         Integer userId = 2;
 
-        Booking booking = Booking.builder()
-                .id(1)
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.now().plusDays(2))
-                .item(Item.builder()
-                        .id(1)
-                        .owner(User.builder()
-                                .id(1)
-                                .build())
-                        .available(true)
-                        .build())
-                .booker(User.builder()
-                        .id(2)
-                        .build())
-                .status(BookingStatus.WAITING)
-                .build();
+        when(bookingService.getBooking(bookingId, userId)).thenReturn(bookingForGet);
 
-        when(bookingService.getBooking(bookingId, userId)).thenReturn(booking);
-
-        mockMvc.perform(get("/bookings/{bookingId}", 1)
+        mockMvc.perform(get("/bookings/{bookingId}", bookingId)
                         .header("X-Sharer-User-Id", String.valueOf(userId)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andExpect(jsonPath("$.id", is(bookingForGet.getId())))
+                .andExpect(jsonPath("$.booker.id", is(bookingForGet.getBooker().getId())))
+                .andExpect(jsonPath("$.item.id", is(bookingForGet.getItem().getId())))
+                .andExpect(jsonPath("$.status", is(String.valueOf(bookingForGet.getStatus()))));
+    }
+
+    @Test
+    void approvedBookingWhenTrue() throws Exception {
+        int userId = 2;
+        int bookingId = 1;
+        String approve = "true";
+
+        when(bookingService.approveOrReject(bookingId, userId, "true")).thenReturn(bookingForGet);
+
+        mockMvc.perform(patch("/bookings/{bookingId}", bookingId)
+                        .header("X-Sharer-User-Id", String.valueOf(userId))
+                        .param("approved", approve))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andExpect(jsonPath("$.id", is(bookingForGet.getId())))
+                .andExpect(jsonPath("$.status", is(String.valueOf(bookingForGet.getStatus()))))
+                .andExpect(jsonPath("$.booker.id", is(bookingForGet.getBooker().getId())));
+    }
+
+    @Test
+    void createBookingWhenBookingValid() throws Exception {
+        Integer userId = 2;
+
+        when(bookingService.createBooking(any(Booking.class))).thenReturn(booking);
+
+        mockMvc.perform(post("/bookings", bookingRequestForCreate)
+                        .header("X-Sharer-User-Id", String.valueOf(userId))
+                        .content(objectMapper.writeValueAsString(bookingRequestForCreate))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json"))
                 .andExpect(jsonPath("$.id", is(booking.getId())))
@@ -73,111 +140,16 @@ class BookingControllerTest {
     }
 
     @Test
-    void approvedBooking() throws Exception {
-        int userId = 2;
-        int bookingId = 1;
-        String approve = "true";
-
-        User owner = new User();
-        owner.setId(2);
-
-        Item newItem = new Item();
-        newItem.setId(1);
-        newItem.setName("test");
-        newItem.setDescription("test");
-        newItem.setAvailable(true);
-        newItem.setOwner(owner);
-
-        Booking booking = Booking.builder()
-                .id(1)
-                .status(BookingStatus.APPROVED)
-                .booker(User.builder()
-                        .id(1)
-                        .build())
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.now().plusDays(2))
-                .item(newItem)
-                .build();
-
-        when(bookingService.approveOrReject(bookingId, userId, "true")).thenReturn(booking);
-
-        mockMvc.perform(patch("/bookings/{bookingId}", bookingId)
-                        .header("X-Sharer-User-Id", String.valueOf(userId))
-                        .param("approved", approve))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("application/json"))
-                .andExpect(jsonPath("$.id", is(booking.getId())))
-                .andExpect(jsonPath("$.status", is(String.valueOf(booking.getStatus()))));
-    }
-
-
-    @Test
-    void createBookingWhenBookingValid() throws Exception {
-        Integer userId = 2;
-        BookingRequest bookingRequest = BookingRequest.builder()
-                .itemId(1)
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.now().plusDays(2))
-                .build();
-
-        Booking bookingReq = Booking.builder()
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.now().plusDays(2))
-                .build();
-
-        Booking bookingSaved = Booking.builder()
-                .id(1)
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.now().plusDays(2))
-                .item(Item.builder()
-                        .id(1)
-                        .owner(User.builder()
-                                .id(1)
-                                .build())
-                        .available(true)
-                        .build())
-                .booker(User.builder()
-                        .id(2)
-                        .build())
-                .status(BookingStatus.WAITING)
-                .build();
-
-        when(bookingService.createBooking(bookingReq)).thenReturn(bookingSaved);
-
-        mockMvc.perform(post("/bookings", bookingRequest)
-                        .header("X-Sharer-User-Id", String.valueOf(userId))
-                        .content(objectMapper.writeValueAsString(bookingRequest))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("application/json"))
-                .andExpect(jsonPath("$.id", is(bookingSaved.getId())))
-                .andExpect(jsonPath("$.booker.id", is(bookingSaved.getBooker().getId())))
-                .andExpect(jsonPath("$.item.id", is(bookingSaved.getItem().getId())))
-                .andExpect(jsonPath("$.status", is(String.valueOf(bookingSaved.getStatus()))));
-
-    }
-
-    @Test
     void createBookingWhenNotValidDate() throws Exception {
         Integer userId = 2;
-        BookingRequest bookingRequest = BookingRequest.builder()
-                .itemId(1)
-                .start(LocalDateTime.now().minusDays(1))
-                .end(LocalDateTime.now().minusDays(3))
-                .build();
 
-        Booking bookingReq = Booking.builder()
-                .start(LocalDateTime.now().minusDays(1))
-                .end(LocalDateTime.now().minusDays(3))
-                .build();
+        when(bookingService.createBooking(bookingReqNotValidDate)).thenThrow(new AccessibilityErrorException("Не верные даты"));
 
-        when(bookingService.createBooking(bookingReq)).thenThrow(new AccessibilityErrorException("Не верные даты"));
+        AccessibilityErrorException exception = assertThrows(AccessibilityErrorException.class, () -> bookingService.createBooking(bookingReqNotValidDate));
 
-        AccessibilityErrorException exception = assertThrows(AccessibilityErrorException.class, () -> bookingService.createBooking(bookingReq));
-
-        mockMvc.perform(post("/bookings", bookingRequest)
+        mockMvc.perform(post("/bookings", bookingRequestNotValidDate)
                         .header("X-Sharer-User-Id", String.valueOf(userId))
-                        .content(objectMapper.writeValueAsString(bookingRequest))
+                        .content(objectMapper.writeValueAsString(bookingRequestNotValidDate))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType("application/json"))
@@ -191,44 +163,6 @@ class BookingControllerTest {
         Integer from = 0;
         Integer size = 10;
 
-        List<Booking> bookings = new ArrayList<>();
-
-        Booking bookingOne = Booking.builder()
-                .id(1)
-                .start(LocalDateTime.now().minusDays(2))
-                .end(LocalDateTime.now().minusDays(1))
-                .item(Item.builder()
-                        .id(1)
-                        .owner(User.builder()
-                                .id(1)
-                                .build())
-                        .available(true)
-                        .build())
-                .booker(User.builder()
-                        .id(2)
-                        .build())
-                .status(BookingStatus.PAST)
-                .build();
-        bookings.add(bookingOne);
-
-        Booking bookingTwo = Booking.builder()
-                .id(2)
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.now().plusDays(2))
-                .item(Item.builder()
-                        .id(1)
-                        .owner(User.builder()
-                                .id(1)
-                                .build())
-                        .available(true)
-                        .build())
-                .booker(User.builder()
-                        .id(2)
-                        .build())
-                .status(BookingStatus.WAITING)
-                .build();
-        bookings.add(bookingTwo);
-
         when(bookingService.getBookingsByUserId(userId, state, false, from, size)).thenReturn(bookings);
 
         mockMvc.perform(get("/bookings")
@@ -239,11 +173,11 @@ class BookingControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json"))
                 .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id", is(bookingOne.getId())))
-                .andExpect(jsonPath("$[0].item.id", is(bookingOne.getItem().getId())))
-                .andExpect(jsonPath("$[0].booker.id", is(bookingOne.getBooker().getId())))
-                .andExpect(jsonPath("$[1].id", is(bookingTwo.getId())))
-                .andExpect(jsonPath("$[1].item.id", is(bookingTwo.getItem().getId())))
-                .andExpect(jsonPath("$[1].booker.id", is(bookingTwo.getBooker().getId())));
+                .andExpect(jsonPath("$[0].id", is(booking.getId())))
+                .andExpect(jsonPath("$[0].item.id", is(booking.getItem().getId())))
+                .andExpect(jsonPath("$[0].booker.id", is(booking.getBooker().getId())))
+                .andExpect(jsonPath("$[1].id", is(bookingForGet.getId())))
+                .andExpect(jsonPath("$[1].item.id", is(bookingForGet.getItem().getId())))
+                .andExpect(jsonPath("$[1].booker.id", is(bookingForGet.getBooker().getId())));
     }
 }

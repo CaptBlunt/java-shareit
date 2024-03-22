@@ -33,6 +33,56 @@ class ItemRepositoryTest {
     @Autowired
     private RequestRepository requestRepository;
 
+    User user = User.builder()
+            .email("bob@gamail.com")
+            .name("Bob").build();
+       /* user.setEmail("bob@gamail.com");
+        user.setName("Bob");*/
+
+
+    /*Item item = Item.builder()
+            .name("Test")
+            .description("Test")
+            .owner(user)
+            .available(true)
+            .request(request).build();*/
+        /*item.setName("Test");
+        item.setDescription("Test");
+        item.setOwner(user);
+        item.setAvailable(true);*/
+
+    Item itemTwo = Item.builder()
+            .name("Str")
+            .description("Tst")
+            .owner(user)
+            .available(true).build();
+        /*itemTwo.setName("Str");
+        itemTwo.setDescription("Tst");
+        itemTwo.setOwner(user);
+        itemTwo.setAvailable(true);
+        itemRepository.save(itemTwo);*/
+
+    User userTwo = User.builder()
+            .email("bob2@gamail.com")
+            .name("Bob2")
+            .build();
+
+    Request request = Request.builder()
+            .description("test")
+            .requestor(userTwo)
+            .createdDate(LocalDateTime.now()).build();
+        /*request.setDescription("fdasfsaf");
+        request.setRequestor(userTwo);
+        request.setCreatedDate(LocalDateTime.now());
+        requestRepository.save(request);*/
+
+    Item item = Item.builder()
+            .name("Test")
+            .description("Test")
+            .owner(user)
+            .available(true)
+            .request(request).build();
+
 
     @BeforeEach
     private void delete() {
@@ -40,11 +90,17 @@ class ItemRepositoryTest {
         userRepository.deleteAll();
         itemRepository.deleteAll();
         requestRepository.deleteAll();
+
+        userRepository.save(user);
+        userRepository.save(userTwo);
+        itemRepository.save(item);
+        itemRepository.save(itemTwo);
+        requestRepository.save(request);
     }
 
     @Test
     void findByOwnerId() {
-        User user = new User();
+       /* User user = new User();
         user.setEmail("bob@gamail.com");
         user.setName("Bob");
         userRepository.save(user);
@@ -54,7 +110,7 @@ class ItemRepositoryTest {
         item.setDescription("Test");
         item.setOwner(user);
         item.setAvailable(true);
-        itemRepository.save(item);
+        itemRepository.save(item);*/
 
         PageRequest page = PageRequest.of(1 / 10, 10);
 
@@ -66,26 +122,26 @@ class ItemRepositoryTest {
 
     @Test
     void findByNameContainingOrDescriptionContainingIgnoreCase() {
-        User user = new User();
+        /*User user = new User();
         user.setEmail("bob@gamail.com");
         user.setName("Bob");
-        userRepository.save(user);
+        userRepository.save(user);*/
 
         String str = "es";
 
-        Item item = new Item();
+       /* Item item = new Item();
         item.setName("Test");
         item.setDescription("Str");
         item.setOwner(user);
         item.setAvailable(true);
-        itemRepository.save(item);
+        itemRepository.save(item);*/
 
-        Item item2 = new Item();
+        /*Item item2 = new Item();
         item2.setName("Str");
         item2.setDescription("Tst");
         item2.setOwner(user);
         item2.setAvailable(true);
-        itemRepository.save(item2);
+        itemRepository.save(item2);*/
 
         PageRequest page = PageRequest.of(1 / 10, 10);
 
@@ -97,12 +153,12 @@ class ItemRepositoryTest {
 
     @Test
     void findByRequestId() {
-        User user = new User();
+        /*User user = new User();
         user.setEmail("bob@gamail.com");
         user.setName("Bob");
-        userRepository.save(user);
+        userRepository.save(user);*/
 
-        User user2 = new User();
+        /*User user2 = new User();
         user2.setEmail("bob2@gamail.com");
         user2.setName("Bob2");
         userRepository.save(user2);
@@ -111,15 +167,15 @@ class ItemRepositoryTest {
         request.setDescription("fdasfsaf");
         request.setRequestor(user2);
         request.setCreatedDate(LocalDateTime.now());
-        requestRepository.save(request);
+        requestRepository.save(request);*/
 
-        Item item = new Item();
+        /*Item item = new Item();
         item.setName("Test");
         item.setDescription("Test");
         item.setOwner(user);
         item.setAvailable(true);
         item.setRequest(request);
-        itemRepository.save(item);
+        itemRepository.save(item);*/
 
         Item item2 = itemRepository.findByRequestId(request.getId());
 

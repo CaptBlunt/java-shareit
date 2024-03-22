@@ -56,6 +56,7 @@ class UserServiceTest {
     @Test
     void createNotValidEmailUserTest() {
         User user = new User(null, "", "Bob");
+
         ValidateException exception = assertThrows(ValidateException.class, () -> {
             userService.createUser(user);
         });
@@ -77,6 +78,7 @@ class UserServiceTest {
     void getAllUsers() {
         User user = new User(1, "bob@gamail.com", "Bob");
         User user2 = new User(2, "bob2@gamail.com", "Bob2");
+
         List<User> usersAll = new ArrayList<>(Arrays.asList(user, user2));
         when(userRepository.findAll()).thenReturn(usersAll);
 
@@ -89,6 +91,7 @@ class UserServiceTest {
     @Test
     void getUserById() {
         User user = new User(1, "bob@gamail.com", "Bob");
+
         Integer id = 1;
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
 

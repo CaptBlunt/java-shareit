@@ -14,18 +14,16 @@ import ru.practicum.shareit.comments.dto.CommentResponse;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemRequest;
 import ru.practicum.shareit.item.dto.ItemResponse;
-import ru.practicum.shareit.item.dto.ItemUpdateRequest;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemServiceImpl;
-import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -46,26 +44,49 @@ class ItemControllerTest {
     @MockBean
     private CommentMapper commentMapper;
 
+    int itemId = 1;
+    int userId = 2;
+    ItemResponse itemResponse = ItemResponse.builder()
+            .id(itemId)
+            .name("Test")
+            .description("Test")
+            .available(true)
+            .build();
+
+    ItemRequest itemReq = ItemRequest.builder()
+            .name("test")
+            .description("test")
+            .available(true)
+            .build();
+
+    Item item = Item.builder()
+            .id(itemId)
+            .name("Test")
+            .description("Test")
+            .available(true)
+            .build();
+
+    Item itemTwo = Item.builder()
+            .id(2)
+            .description("test1")
+            .build();
+    List<Item> items = List.of(item, itemTwo);
+
+    CommentRequest request = CommentRequest.builder()
+            .text("test")
+            .build();
+
+    CommentResponse response = CommentResponse.builder()
+            .id(1)
+            .authorName("name")
+            .text("test")
+            .created(LocalDateTime.now())
+            .build();
+
+
     @Test
     void getItemById() throws Exception {
-        int itemId = 1;
-        int userId = 2;
-
-        ItemResponse itemResponse = ItemResponse.builder()
-                .id(itemId)
-                .name("Test")
-                .description("Test")
-                .available(true)
-                .build();
-
-        Item itemFromService = Item.builder()
-                .id(itemId)
-                .name("Test")
-                .description("Test")
-                .available(true)
-                .build();
-
-        when(itemService.getItemById(1, userId)).thenReturn(itemFromService);
+        when(itemService.getItemById(itemId, userId)).thenReturn(item);
 
         mockMvc.perform(get("/items/{id}", itemId)
                         .header("X-Sharer-User-Id", String.valueOf(userId)))
@@ -79,28 +100,7 @@ class ItemControllerTest {
 
     @Test
     void createItemWhenItemValid() throws Exception {
-        Integer userId = 2;
-
-        User owner = new User();
-        owner.setId(1);
-
-        ItemRequest itemReq = new ItemRequest();
-        itemReq.setName("test");
-        itemReq.setDescription("test");
-        itemReq.setAvailable(true);
-
-        Item newItem = new Item();
-        newItem.setName("test");
-        newItem.setDescription("test");
-        newItem.setAvailable(true);
-
-        Item itemSaved = new Item();
-        itemSaved.setId(1);
-        itemSaved.setName("test");
-        itemSaved.setDescription("test");
-        itemSaved.setAvailable(true);
-
-        when(itemService.createItem(newItem)).thenReturn(itemSaved);
+        when(itemService.createItem(any(Item.class))).thenReturn(item);
 
         mockMvc.perform(post("/items", itemReq)
                         .header("X-Sharer-User-Id", String.valueOf(userId))
@@ -108,36 +108,17 @@ class ItemControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json"))
-                .andExpect(jsonPath("$.id", is(itemSaved.getId())))
-                .andExpect(jsonPath("$.name", is(itemSaved.getName())))
-                .andExpect(jsonPath("$.description", is(itemSaved.getDescription())))
-                .andExpect(jsonPath("$.available", is(itemSaved.getAvailable())));
+                .andExpect(jsonPath("$.id", is(item.getId())))
+                .andExpect(jsonPath("$.name", is(item.getName())))
+                .andExpect(jsonPath("$.description", is(item.getDescription())))
+                .andExpect(jsonPath("$.available", is(item.getAvailable())));
     }
 
     @Test
     void updateItemWhenUserNotTheOwnerItem() throws Exception {
-        Integer userId = 1;
-        Integer itemId = 1;
+        when(itemService.updateItem(item)).thenThrow(new NotFoundException("Пользователь " + userId + " не является владельцем  вещи " + itemId));
 
-        User owner = new User();
-        owner.setId(2);
-
-        ItemUpdateRequest itemReq = new ItemUpdateRequest();
-        itemReq.setId(itemId);
-        itemReq.setName("test");
-        itemReq.setDescription("test");
-        itemReq.setAvailable(true);
-
-        Item newItem = new Item();
-        newItem.setId(itemId);
-        newItem.setName("test");
-        newItem.setDescription("test");
-        newItem.setAvailable(true);
-        newItem.setOwner(owner);
-
-        when(itemService.updateItem(newItem)).thenThrow(new NotFoundException("Пользователь " + userId + " не является владельцем  вещи " + itemId));
-
-        NotFoundException exception = assertThrows(NotFoundException.class, () -> itemService.updateItem(newItem));
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> itemService.updateItem(item));
 
         mockMvc.perform(patch("/items/{id}", itemId)
                         .header("X-Sharer-User-Id", String.valueOf(userId))
@@ -149,22 +130,10 @@ class ItemControllerTest {
     }
 
     @Test
-    void getAllItemsByUserId() throws Exception {
+    void getAllItemsByUserIdWhenNotParameters() throws Exception {
         Integer userId = 1;
         Integer from = null;
         Integer size = null;
-
-        List<Item> items = new ArrayList<>();
-
-        Item item = new Item();
-        item.setId(1);
-        item.setName("test");
-        items.add(item);
-
-        Item item1 = new Item();
-        item1.setId(2);
-        item1.setDescription("test1");
-        items.add(item1);
 
         when(itemService.findByOwnerId(userId, from, size)).thenReturn(items);
 
@@ -174,8 +143,8 @@ class ItemControllerTest {
                 .andExpect(content().contentType("application/json"))
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].id", is(item.getId())))
-                .andExpect(jsonPath("$[1].id", is(item1.getId())))
-                .andExpect(jsonPath("$[1].description", is(item1.getDescription())));
+                .andExpect(jsonPath("$[1].id", is(itemTwo.getId())))
+                .andExpect(jsonPath("$[1].description", is(itemTwo.getDescription())));
     }
 
     @Test
@@ -184,18 +153,6 @@ class ItemControllerTest {
         Integer userId = 1;
         Integer from = 0;
         Integer size = 10;
-
-        List<Item> items = new ArrayList<>();
-
-        Item item = new Item();
-        item.setId(1);
-        item.setName("test");
-        items.add(item);
-
-        Item item1 = new Item();
-        item1.setId(2);
-        item1.setDescription("test1");
-        items.add(item1);
 
         when(itemService.searchBySubstring(text, text, from, size)).thenReturn(items);
 
@@ -208,13 +165,12 @@ class ItemControllerTest {
                 .andExpect(content().contentType("application/json"))
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].id", is(item.getId())))
-                .andExpect(jsonPath("$[1].id", is(item1.getId())))
-                .andExpect(jsonPath("$[1].description", is(item1.getDescription())));
+                .andExpect(jsonPath("$[1].id", is(itemTwo.getId())))
+                .andExpect(jsonPath("$[1].description", is(itemTwo.getDescription())));
     }
 
     @Test
     void deleteItemById() throws Exception {
-        Integer itemId = 1;
         doNothing().when(itemService).deleteItem(itemId);
 
         mockMvc.perform(delete("/items/{id}", itemId)
@@ -224,20 +180,6 @@ class ItemControllerTest {
 
     @Test
     void addComment() throws Exception {
-        Integer userId = 2;
-        int itemId = 2;
-
-        CommentRequest request = CommentRequest.builder()
-                .text("dasd")
-                .build();
-
-        CommentResponse response = CommentResponse.builder()
-                .id(1)
-                .authorName("dad")
-                .text("dasd")
-                .created(LocalDateTime.now())
-                .build();
-
         when(commentMapper.commentResponse(itemService.addComment(itemId, commentMapper.commentForCreate(request), userId))).thenReturn(response);
 
         mockMvc.perform(post("/items/{id}/comment", itemId, request)

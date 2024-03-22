@@ -28,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-//@MockitoSettings(strictness = Strictness.LENIENT)
 class RequestServiceImplTest {
 
     @InjectMocks
@@ -140,9 +139,6 @@ class RequestServiceImplTest {
     @Test
     void getAllRequestsWhenWithoutParameters() {
         int userId = 1;
-        User user = User.builder()
-                .id(userId)
-                .build();
 
         User requestor = User.builder()
                 .id(2)

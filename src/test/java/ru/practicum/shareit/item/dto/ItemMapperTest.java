@@ -27,15 +27,15 @@ class ItemMapperTest {
     }
 
     @Test
-    void itemResponseFromItemForUser() {
+    void itemResponseFromItemForUserWhenCommentsEmpty() {
         Item item = new Item();
         item.setId(1);
         item.setName("Test Item");
         item.setDescription("Test Description");
         item.setAvailable(true);
-        item.setComments(new ArrayList<>());
+        item.setComments(Collections.emptyList());
 
-        ItemResponse result = itemMapper.itemResponseFromItemForUser(item, new ArrayList<>());
+        ItemResponse result = itemMapper.itemResponseFromItemForUser(item, Collections.emptyList());
 
         assertEquals(result.getId(), item.getId());
         assertEquals(result.getDescription(), item.getDescription());
@@ -48,7 +48,7 @@ class ItemMapperTest {
         itemResponse.setName("Test Item");
         itemResponse.setDescription("Test Description");
         itemResponse.setAvailable(true);
-        itemResponse.setComments(new ArrayList<>());
+        itemResponse.setComments(Collections.emptyList());
 
         Item item = itemMapper.itemFromItemResponse(itemResponse);
 
@@ -138,9 +138,9 @@ class ItemMapperTest {
         comments.add(comment1);
 
 
-        List<Booking> bookings = new ArrayList<>();
-        List<Booking> pastBookings = new ArrayList<>();
-        List<Booking> futureBookings = new ArrayList<>();
+        List<Booking> bookings = Collections.emptyList();
+        List<Booking> pastBookings = Collections.emptyList();
+        List<Booking> futureBookings = Collections.emptyList();
 
         ItemResponse result = itemMapper.itemForOwner(item, comments, bookings, pastBookings, futureBookings);
 

@@ -54,7 +54,6 @@ class CommentRepositoryTest {
         item.setAvailable(true);
         itemRepository.save(item);
 
-        String str = "2024-03-08 12:30";
         String str1 = "2024-03-09 12:30";
         String str2 = "2024-03-10 12:30";
 

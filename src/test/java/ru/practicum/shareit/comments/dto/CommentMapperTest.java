@@ -19,65 +19,50 @@ class CommentMapperTest {
         commentMapper = new CommentMapper();
     }
 
+    CommentRequest commentRequest = CommentRequest.builder()
+            .text("test")
+            .build();
+
+    User author = User.builder()
+            .id(1)
+            .email("abc@de.com")
+            .name("test")
+            .build();
+
+    Item item = Item.builder()
+            .id(1)
+            .build();
+
+    Comment comment = Comment.builder()
+            .id(1)
+            .text("test")
+            .authorName(author)
+            .created(LocalDateTime.now())
+            .build();
 
     @Test
     void commentFromCommentRequest() {
-        CommentRequest request = CommentRequest.builder()
-                .text("dasd")
-                .build();
+        Comment comment = commentMapper.commentFromCommentRequest(commentRequest, author, item);
 
-        User user = User.builder()
-                .id(1)
-                .email("asd@dasd.com")
-                .name("asda")
-                .build();
-
-        Item item = Item.builder()
-                .id(1)
-                .build();
-
-        Comment comment = commentMapper.commentFromCommentRequest(request, user, item);
-
-        assertEquals(comment.getText(), request.getText());
-        assertEquals(comment.getAuthorName(), user);
+        assertEquals(comment.getText(), commentRequest.getText());
+        assertEquals(comment.getAuthorName(), author);
         assertEquals(comment.getItem(), item);
     }
 
     @Test
     void commentResponseFromComment() {
-        Comment comment1 = Comment.builder()
-                .id(1)
-                .text("dasd")
-                .created(LocalDateTime.now())
-                .build();
+        CommentResponse commentResponse = commentMapper.commentResponseFromComment(comment, "name");
 
-        CommentResponse comment = commentMapper.commentResponseFromComment(comment1, "name");
-
-        assertEquals(comment.getText(), comment1.getText());
-        assertEquals(comment.getCreated(), comment1.getCreated());
+        assertEquals(comment.getText(), commentResponse.getText());
+        assertEquals(comment.getCreated(), commentResponse.getCreated());
     }
 
     @Test
     void commentResponse() {
-        User user = User.builder()
-                .id(1)
-                .email("asd@dasd.com")
-                .name("asda")
-                .build();
+        CommentResponse commentResponse = commentMapper.commentResponse(comment);
 
-
-        Comment comment1 = Comment.builder()
-                .id(1)
-                .text("dasd")
-                .authorName(user)
-                .created(LocalDateTime.now())
-                .build();
-
-        CommentResponse comment = commentMapper.commentResponse(comment1);
-
-        assertEquals(comment.getText(), comment1.getText());
-        assertEquals(comment.getAuthorName(), comment1.getAuthorName().getName());
-        assertEquals(comment.getCreated(), comment1.getCreated());
+        assertEquals(commentResponse.getText(), comment.getText());
+        assertEquals(commentResponse.getAuthorName(), comment.getAuthorName().getName());
+        assertEquals(commentResponse.getCreated(), comment.getCreated());
     }
-
 }

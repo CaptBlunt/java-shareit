@@ -35,7 +35,6 @@ class BookingRepositoryTest {
     private BookingRepository bookingRepository;
 
 
-
     @BeforeEach
     void delete() {
         commentRepository.deleteAll();
@@ -160,6 +159,4 @@ class BookingRepositoryTest {
         assertEquals(bookings.size(), 1);
         assertEquals(bookings.get(0).getBooker().getId(), userBooker.getId());
     }
-
-
 }
