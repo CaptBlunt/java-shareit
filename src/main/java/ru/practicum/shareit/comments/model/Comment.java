@@ -32,4 +32,18 @@ public class Comment {
 
     @Column(name = "created_date")
     private LocalDateTime created;
+
+    public Comment(String text, Item item, LocalDateTime created, User authorName) {
+        this.text = text;
+        this.item = item;
+        this.created = created;
+        this.authorName = authorName;
+    }
+
+    public Comment(int id, String text, User authorName, LocalDateTime created) {
+        this.id = id;
+        this.text = text;
+        this.created = created;
+        this.authorName = authorName;
+    }
 }

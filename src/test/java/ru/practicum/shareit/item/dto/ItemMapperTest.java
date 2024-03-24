@@ -28,12 +28,7 @@ class ItemMapperTest {
 
     @Test
     void itemResponseFromItemForUserWhenCommentsEmpty() {
-        Item item = new Item();
-        item.setId(1);
-        item.setName("Test Item");
-        item.setDescription("Test Description");
-        item.setAvailable(true);
-        item.setComments(Collections.emptyList());
+        Item item = new Item(1, "Test Item", "Test Description", true, Collections.emptyList());
 
         ItemResponse result = itemMapper.itemResponseFromItemForUser(item, Collections.emptyList());
 
@@ -43,12 +38,7 @@ class ItemMapperTest {
 
     @Test
     void itemFromItemResponse() {
-        ItemResponse itemResponse = new ItemResponse();
-        itemResponse.setId(1);
-        itemResponse.setName("Test Item");
-        itemResponse.setDescription("Test Description");
-        itemResponse.setAvailable(true);
-        itemResponse.setComments(Collections.emptyList());
+        ItemResponse itemResponse = new ItemResponse(1, "Test Item", "Test Description", true, Collections.emptyList());
 
         Item item = itemMapper.itemFromItemResponse(itemResponse);
 
@@ -58,26 +48,13 @@ class ItemMapperTest {
 
     @Test
     void itemForOwnerWhenBookingsExists() {
-        Item item = new Item();
-        item.setId(1);
-        item.setName("Test Item");
-        item.setDescription("Test Description");
-        item.setAvailable(true);
-        item.setComments(new ArrayList<>());
+        Item item = new Item(1, "Test Item", "Test Description", true, Collections.emptyList());
 
-        Booking bookingP = Booking.builder()
-                .id(1)
-                .booker(User.builder()
-                        .id(1)
-                        .build())
-                .build();
+        User booker = new User();
 
-        Booking bookingF = Booking.builder()
-                .id(2)
-                .booker(User.builder()
-                        .id(1)
-                        .build())
-                .build();
+        Booking bookingP = new Booking(1, booker);
+
+        Booking bookingF = new Booking(2, booker);
 
         List<Booking> bookings = Collections.singletonList(bookingP);
         List<Booking> bookingsF = Collections.singletonList(bookingF);
@@ -91,15 +68,9 @@ class ItemMapperTest {
 
     @Test
     void itemResponseFromItem() {
-        Item item = new Item();
-        item.setId(1);
-        item.setName("Test Item");
-        item.setDescription("Test Description");
-        item.setAvailable(true);
-        item.setComments(new ArrayList<>());
-        item.setRequest(Request.builder()
-                .id(1)
-                .build());
+        Request request = new Request();
+
+        Item item = new Item(1, "Test Item", "Test Description", true, Collections.emptyList(), request);
 
         ItemResponse response = itemMapper.itemResponseFromItem(item);
 
@@ -109,11 +80,7 @@ class ItemMapperTest {
 
     @Test
     void itemForRequestFromItem() {
-        Item item = new Item();
-        item.setId(1);
-        item.setName("Test Item");
-        item.setDescription("Test Description");
-        item.setAvailable(true);
+        Item item = new Item(1, "Test Item", "Test Description", true);
 
         ItemForRequest itemForRequest = itemMapper.itemForRequestFromItem(item);
 
@@ -123,20 +90,11 @@ class ItemMapperTest {
 
     @Test
     void itemForOwner() {
-        Item item = new Item();
-        item.setId(1);
-        item.setName("Test Item");
-        item.setDescription("Test Description");
-        item.setAvailable(true);
+        Item item = new Item(1, "Test Item", "Test Description", true);
 
         List<CommentResponse> comments = new ArrayList<>();
-        CommentResponse comment1 = new CommentResponse();
-        comment1.setId(1);
-        comment1.setText("Comment 1");
-        comment1.setAuthorName("dasd");
-        comment1.setCreated(LocalDateTime.now().minusDays(1));
+        CommentResponse comment1 = new CommentResponse(1, "Comment 1", "dasd", LocalDateTime.now().minusDays(1));
         comments.add(comment1);
-
 
         List<Booking> bookings = Collections.emptyList();
         List<Booking> pastBookings = Collections.emptyList();

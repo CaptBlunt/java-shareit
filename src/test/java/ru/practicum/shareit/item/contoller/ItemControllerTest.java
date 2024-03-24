@@ -46,43 +46,17 @@ class ItemControllerTest {
 
     int itemId = 1;
     int userId = 2;
-    ItemResponse itemResponse = ItemResponse.builder()
-            .id(itemId)
-            .name("Test")
-            .description("Test")
-            .available(true)
-            .build();
+    ItemResponse itemResponse = new ItemResponse(itemId, "Test", "Test", true);
 
-    ItemRequest itemReq = ItemRequest.builder()
-            .name("test")
-            .description("test")
-            .available(true)
-            .build();
+    ItemRequest itemReq = new ItemRequest("Test", "Test", true);
 
-    Item item = Item.builder()
-            .id(itemId)
-            .name("Test")
-            .description("Test")
-            .available(true)
-            .build();
+    Item item = new Item(itemId, "Test", "Test", true);
 
-    Item itemTwo = Item.builder()
-            .id(2)
-            .description("test1")
-            .build();
+    Item itemTwo = new Item(2, "Test1", "Test1", true);
     List<Item> items = List.of(item, itemTwo);
 
-    CommentRequest request = CommentRequest.builder()
-            .text("test")
-            .build();
-
-    CommentResponse response = CommentResponse.builder()
-            .id(1)
-            .authorName("name")
-            .text("test")
-            .created(LocalDateTime.now())
-            .build();
-
+    CommentRequest request = new CommentRequest("test");
+    CommentResponse response = new CommentResponse(1, "name", "test", LocalDateTime.now());
 
     @Test
     void getItemById() throws Exception {

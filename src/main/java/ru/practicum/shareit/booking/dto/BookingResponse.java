@@ -14,9 +14,14 @@ import java.time.LocalDateTime;
 public class BookingResponse {
 
     private Integer id;
+
     private LocalDateTime start;
+
     private LocalDateTime end;
+
     private BookingStatus status;
+
     private UserResponse.BookerDto booker;
+
     private ItemForBooking item;
 }

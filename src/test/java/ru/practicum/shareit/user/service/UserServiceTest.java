@@ -35,16 +35,9 @@ class UserServiceTest {
 
     @Test
     void createValidUserTest() {
-        User user = User.builder()
-                .email("bob@gamail.com")
-                .name("Bob")
-                .build();
+        User user = new User("bob@gamail.com", "Bob");
 
-        User savedUser = User.builder()
-                .id(1)
-                .email("bob@gamail.com")
-                .name("Bob")
-                .build();
+        User savedUser = new User(1, "bob@gamail.com", "Bob");
         when(userRepository.save(user)).thenReturn(savedUser);
 
         User user1 = userService.createUser(user);
@@ -117,13 +110,9 @@ class UserServiceTest {
 
         Integer id = 1;
 
-        User userOld = new User();
-        userOld.setEmail("bob@gamail.com");
-        userOld.setName("Bob");
+        User userOld = new User("bob@gamail.com", "Bob");
 
-        User userNew = new User();
-        userNew.setEmail("bob2@gamail.com");
-        userNew.setName("Bob2");
+        User userNew = new User("bob2@gamail.com", "Bob2");
 
         when(userRepository.findById(id)).thenReturn(Optional.of(userOld));
 

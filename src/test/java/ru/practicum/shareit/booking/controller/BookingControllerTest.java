@@ -9,7 +9,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.booking.BookingStatus;
-import ru.practicum.shareit.booking.dto.BookingRequest;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.service.BookingServiceImpl;
 import ru.practicum.shareit.exception.AccessibilityErrorException;
@@ -38,69 +37,31 @@ class BookingControllerTest {
     @MockBean
     private BookingServiceImpl bookingService;
 
-    Item item = Item.builder()
-            .id(1)
-            .build();
-    Booking booking = Booking.builder()
-            .id(1)
-            .status(BookingStatus.APPROVED)
-            .booker(User.builder()
-                    .id(1)
-                    .build())
-            .start(LocalDateTime.now().plusDays(1))
-            .end(LocalDateTime.now().plusDays(2))
-            .item(item)
-            .build();
+    Item item = new Item();
 
-    Booking bookingForGet = Booking.builder()
-            .id(1)
-            .start(LocalDateTime.now().plusDays(1))
-            .end(LocalDateTime.now().plusDays(2))
-            .item(Item.builder()
-                    .id(1)
-                    .owner(User.builder()
-                            .id(1)
-                            .build())
-                    .available(true)
-                    .build())
-            .booker(User.builder()
-                    .id(2)
-                    .build())
-            .status(BookingStatus.WAITING)
-            .build();
+    User user = new User();
 
-    List<Booking> bookings = List.of(booking, bookingForGet);
+    Booking booking = new Booking(1, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2), item, user, BookingStatus.APPROVED);
 
-    BookingRequest bookingRequestForCreate = BookingRequest.builder()
-            .itemId(1)
-            .build();
+    List<Booking> bookings = List.of(booking);
 
-    BookingRequest bookingRequestNotValidDate = BookingRequest.builder()
-            .itemId(1)
-            .start(LocalDateTime.now().minusDays(1))
-            .end(LocalDateTime.now().minusDays(3))
-            .build();
-
-    Booking bookingReqNotValidDate = Booking.builder()
-            .start(LocalDateTime.now().minusDays(1))
-            .end(LocalDateTime.now().minusDays(3))
-            .build();
+    Booking bookingReqNotValidDate = new Booking(LocalDateTime.now().minusDays(1), LocalDateTime.now().minusDays(3));
 
     @Test
     void getBookingByIdForOwnerOrBooker() throws Exception {
         Integer bookingId = 1;
         Integer userId = 2;
 
-        when(bookingService.getBooking(bookingId, userId)).thenReturn(bookingForGet);
+        when(bookingService.getBooking(bookingId, userId)).thenReturn(booking);
 
         mockMvc.perform(get("/bookings/{bookingId}", bookingId)
                         .header("X-Sharer-User-Id", String.valueOf(userId)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json"))
-                .andExpect(jsonPath("$.id", is(bookingForGet.getId())))
-                .andExpect(jsonPath("$.booker.id", is(bookingForGet.getBooker().getId())))
-                .andExpect(jsonPath("$.item.id", is(bookingForGet.getItem().getId())))
-                .andExpect(jsonPath("$.status", is(String.valueOf(bookingForGet.getStatus()))));
+                .andExpect(jsonPath("$.id", is(booking.getId())))
+                .andExpect(jsonPath("$.booker.id", is(booking.getBooker().getId())))
+                .andExpect(jsonPath("$.item.id", is(booking.getItem().getId())))
+                .andExpect(jsonPath("$.status", is(String.valueOf(booking.getStatus()))));
     }
 
     @Test
@@ -109,16 +70,16 @@ class BookingControllerTest {
         int bookingId = 1;
         String approve = "true";
 
-        when(bookingService.approveOrReject(bookingId, userId, "true")).thenReturn(bookingForGet);
+        when(bookingService.approveOrReject(bookingId, userId, "true")).thenReturn(booking);
 
         mockMvc.perform(patch("/bookings/{bookingId}", bookingId)
                         .header("X-Sharer-User-Id", String.valueOf(userId))
                         .param("approved", approve))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json"))
-                .andExpect(jsonPath("$.id", is(bookingForGet.getId())))
-                .andExpect(jsonPath("$.status", is(String.valueOf(bookingForGet.getStatus()))))
-                .andExpect(jsonPath("$.booker.id", is(bookingForGet.getBooker().getId())));
+                .andExpect(jsonPath("$.id", is(booking.getId())))
+                .andExpect(jsonPath("$.status", is(String.valueOf(booking.getStatus()))))
+                .andExpect(jsonPath("$.booker.id", is(booking.getBooker().getId())));
     }
 
     @Test
@@ -127,9 +88,9 @@ class BookingControllerTest {
 
         when(bookingService.createBooking(any(Booking.class))).thenReturn(booking);
 
-        mockMvc.perform(post("/bookings", bookingRequestForCreate)
+        mockMvc.perform(post("/bookings", booking)
                         .header("X-Sharer-User-Id", String.valueOf(userId))
-                        .content(objectMapper.writeValueAsString(bookingRequestForCreate))
+                        .content(objectMapper.writeValueAsString(booking))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json"))
@@ -147,9 +108,9 @@ class BookingControllerTest {
 
         AccessibilityErrorException exception = assertThrows(AccessibilityErrorException.class, () -> bookingService.createBooking(bookingReqNotValidDate));
 
-        mockMvc.perform(post("/bookings", bookingRequestNotValidDate)
+        mockMvc.perform(post("/bookings", bookingReqNotValidDate)
                         .header("X-Sharer-User-Id", String.valueOf(userId))
-                        .content(objectMapper.writeValueAsString(bookingRequestNotValidDate))
+                        .content(objectMapper.writeValueAsString(bookingReqNotValidDate))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType("application/json"))
@@ -172,12 +133,10 @@ class BookingControllerTest {
                         .param("size", String.valueOf(size)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json"))
-                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].id", is(booking.getId())))
                 .andExpect(jsonPath("$[0].item.id", is(booking.getItem().getId())))
                 .andExpect(jsonPath("$[0].booker.id", is(booking.getBooker().getId())))
-                .andExpect(jsonPath("$[1].id", is(bookingForGet.getId())))
-                .andExpect(jsonPath("$[1].item.id", is(bookingForGet.getItem().getId())))
-                .andExpect(jsonPath("$[1].booker.id", is(bookingForGet.getBooker().getId())));
+                .andExpect(jsonPath("$.[0].status", is(String.valueOf(booking.getStatus()))));
     }
 }

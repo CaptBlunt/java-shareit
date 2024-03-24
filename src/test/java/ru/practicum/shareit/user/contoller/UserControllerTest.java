@@ -95,14 +95,9 @@ class UserControllerTest {
 
         Integer id = 1;
 
-        User user = new User();
-        user.setId(id);
-        user.setEmail("bobUpd@gamail.com");
-        user.setName("BobUpd");
+        User user = new User(id, "bobUpd@gamail.com", "BobUpd");
 
-        User user2 = new User();
-        user2.setEmail("bobUpd@gamail.com");
-        user2.setName("BobUpd");
+        User user2 = new User("bobUpd@gamail.com", "BobUpd");
 
         when(userService.updateUser(id, user2)).thenReturn(user);
 

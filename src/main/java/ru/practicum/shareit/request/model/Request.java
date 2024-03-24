@@ -20,8 +20,6 @@ public class Request {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @NotBlank(message = "Поле описания не может быть пустым")
-    @NotNull(message = "Поле описания не может быть null")
     @Column(nullable = false, length = 200)
     private String description;
 
@@ -30,4 +28,21 @@ public class Request {
     private User requestor;
 
     private LocalDateTime createdDate;
+
+    public Request(String description, LocalDateTime createdDate) {
+        this.description = description;
+        this.createdDate = createdDate;
+    }
+
+    public Request(int id, String description, LocalDateTime createdDate) {
+        this.id = id;
+        this.description = description;
+        this.createdDate = createdDate;
+    }
+
+    public Request(String description, User requestor, LocalDateTime createdDate) {
+        this.description = description;
+        this.requestor = requestor;
+        this.createdDate = createdDate;
+    }
 }

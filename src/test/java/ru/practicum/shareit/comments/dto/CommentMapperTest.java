@@ -19,26 +19,12 @@ class CommentMapperTest {
         commentMapper = new CommentMapper();
     }
 
-    CommentRequest commentRequest = CommentRequest.builder()
-            .text("test")
-            .build();
+    CommentRequest commentRequest = new CommentRequest("test");
+    User author = new User(1, "abc@de.com", "test");
 
-    User author = User.builder()
-            .id(1)
-            .email("abc@de.com")
-            .name("test")
-            .build();
+    Item item = new Item();
 
-    Item item = Item.builder()
-            .id(1)
-            .build();
-
-    Comment comment = Comment.builder()
-            .id(1)
-            .text("test")
-            .authorName(author)
-            .created(LocalDateTime.now())
-            .build();
+    Comment comment = new Comment(1, "test", author, LocalDateTime.now());
 
     @Test
     void commentFromCommentRequest() {

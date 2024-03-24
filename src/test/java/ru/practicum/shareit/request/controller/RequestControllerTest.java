@@ -8,9 +8,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.practicum.shareit.request.dto.RequestForUser;
-import ru.practicum.shareit.request.dto.RequestFromUser;
-import ru.practicum.shareit.request.dto.RequestResponseForCreate;
+import ru.practicum.shareit.request.dto.UsersItemRequestResponse;
+import ru.practicum.shareit.request.dto.CreateItemRequest;
+import ru.practicum.shareit.request.dto.CreateItemRequestResponse;
 import ru.practicum.shareit.request.model.Request;
 import ru.practicum.shareit.request.service.RequestServiceImpl;
 
@@ -41,26 +41,14 @@ class RequestControllerTest {
     void postRequest() throws Exception {
         Integer userId = 2;
 
-        RequestFromUser requestInController = RequestFromUser.builder()
-                .description("Test")
-                .build();
+        CreateItemRequest requestInController = new CreateItemRequest("Test");
 
-        Request requestServiceIn = Request.builder()
-                .description("Test")
-                .createdDate(LocalDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS))
-                .build();
+        Request requestServiceIn = new Request("Test", LocalDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS));
 
-        Request requestServiceOut = Request.builder()
-                .id(1)
-                .description("Test")
-                .createdDate(LocalDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS))
-                .build();
+        Request requestServiceOut = new Request(1, "Test", LocalDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS));
 
-        RequestResponseForCreate requestControllerOut = RequestResponseForCreate.builder()
-                .id(1)
-                .description("Test")
-                .created(LocalDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS))
-                .build();
+        CreateItemRequestResponse requestControllerOut = new CreateItemRequestResponse(1, "Test", LocalDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS));
+
 
         when(requestService.createRequest(requestServiceIn)).thenReturn(requestServiceOut);
 
@@ -81,19 +69,11 @@ class RequestControllerTest {
         Integer from = 0;
         Integer size = 10;
 
-        List<RequestForUser> requests = new ArrayList<>();
-        RequestForUser requestOne = RequestForUser.builder()
-                .id(1)
-                .description("Test")
-                .created(LocalDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS))
-                .build();
+        List<UsersItemRequestResponse> requests = new ArrayList<>();
+        UsersItemRequestResponse requestOne = new UsersItemRequestResponse(1, "Test", LocalDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS));
         requests.add(requestOne);
 
-        RequestForUser requestTwo = RequestForUser.builder()
-                .id(2)
-                .description("Test2")
-                .created(LocalDateTime.now().minusDays(2).truncatedTo(ChronoUnit.SECONDS))
-                .build();
+        UsersItemRequestResponse requestTwo = new UsersItemRequestResponse(1, "Test2", LocalDateTime.now().minusDays(2).truncatedTo(ChronoUnit.SECONDS));
         requests.add(requestTwo);
 
         when(requestService.getAllRequestForUser(userId, from, size)).thenReturn(requests);
@@ -116,11 +96,8 @@ class RequestControllerTest {
         int id = 1;
         int userId = 2;
 
-        RequestForUser forUser = RequestForUser.builder()
-                .id(id)
-                .description("Test")
-                .created(LocalDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS))
-                .currentDate(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)).build();
+        UsersItemRequestResponse forUser = new UsersItemRequestResponse(id, "Test", LocalDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS), LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
+
         when(requestService.getRequestByIdForUser(1, 2)).thenReturn(forUser);
 
         mockMvc.perform(get("/requests/{id}", id)

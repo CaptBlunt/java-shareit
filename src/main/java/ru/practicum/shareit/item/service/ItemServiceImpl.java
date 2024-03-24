@@ -54,7 +54,6 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional
     public Item createItem(Item item) {
-        validateItem(item);
         userRepository.findById(item.getOwner().getId())
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
@@ -178,8 +177,6 @@ public class ItemServiceImpl implements ItemService {
             item.setAvailable(itemUpd.getAvailable());
         }
 
-        validateItem(item);
-
         itemUpd.setName(item.getName());
         itemUpd.setDescription(item.getDescription());
         itemUpd.setAvailable(item.getAvailable());
@@ -226,16 +223,5 @@ public class ItemServiceImpl implements ItemService {
         }
 
         return commentRepository.save(commentMapper.commentFromCommentRequest(commentMapper.commentRequestFromComment(comment), user, itemForComment));
-    }
-
-    public void validateItem(Item item) {
-        String itemName = item.getName();
-        String itemDesc = item.getDescription();
-        Boolean itemAvail = item.getAvailable();
-
-        if ((itemAvail == null) || (itemDesc == null || itemDesc.isEmpty()) || (itemName == null || itemName.isEmpty())) {
-            log.info("Ошибка валидации вещи");
-            throw new ValidateException("Некорректно указаны данные");
-        }
     }
 }

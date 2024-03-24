@@ -11,8 +11,8 @@ import ru.practicum.shareit.item.dto.ItemForRequest;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemRepository;
-import ru.practicum.shareit.request.dto.RequestForUser;
-import ru.practicum.shareit.request.dto.RequestMapper;
+import ru.practicum.shareit.request.dto.UsersItemRequestResponse;
+import ru.practicum.shareit.request.dto.ItemRequestMapper;
 import ru.practicum.shareit.request.model.Request;
 import ru.practicum.shareit.user.service.UserRepository;
 
@@ -31,7 +31,7 @@ public class RequestServiceImpl implements RequestService {
     private final ItemRepository itemRepository;
 
     private final ItemMapper itemMapper;
-    private final RequestMapper requestMapper;
+    private final ItemRequestMapper itemRequestMapper;
 
     public PageRequest pagination(Integer from, Integer size) {
         if (from < 0 || size < 0) {
@@ -63,9 +63,9 @@ public class RequestServiceImpl implements RequestService {
         return requests;
     }
 
-    public List<RequestForUser> getRequestsForUser(Integer userId) {
+    public List<UsersItemRequestResponse> getRequestsForUser(Integer userId) {
         List<Request> requests = getRequests(userId);
-        List<RequestForUser> requestForUsers = new ArrayList<>();
+        List<UsersItemRequestResponse> usersItemRequestResponses = new ArrayList<>();
 
         for (Request request : requests) {
             List<ItemForRequest> itemForRequests = new ArrayList<>();
@@ -76,10 +76,10 @@ public class RequestServiceImpl implements RequestService {
             } else {
                 itemForRequests.add(itemMapper.itemForRequestFromItem(item));
             }
-            requestForUsers.add(requestMapper.requestForUser(request, itemForRequests));
+            usersItemRequestResponses.add(itemRequestMapper.requestForUser(request, itemForRequests));
         }
 
-        return requestForUsers;
+        return usersItemRequestResponses;
     }
 
     @Override
@@ -94,10 +94,10 @@ public class RequestServiceImpl implements RequestService {
             return requests.isEmpty() ? Collections.emptyList() : requests;
         }
 
-    public List<RequestForUser> getAllRequestForUser(Integer userId, Integer from, Integer size) {
+    public List<UsersItemRequestResponse> getAllRequestForUser(Integer userId, Integer from, Integer size) {
         List<Request> requests = getAllRequests(userId, from, size);
 
-        List<RequestForUser> requestForUsers = new ArrayList<>();
+        List<UsersItemRequestResponse> usersItemRequestResponses = new ArrayList<>();
 
         for (Request request : requests) {
             List<ItemForRequest> itemForRequest = new ArrayList<>();
@@ -106,9 +106,9 @@ public class RequestServiceImpl implements RequestService {
             } else {
                 itemForRequest.add(itemMapper.itemForRequestFromItem(itemRepository.findByRequestId(request.getId())));
             }
-            requestForUsers.add(requestMapper.requestForUser(request, itemForRequest));
+            usersItemRequestResponses.add(itemRequestMapper.requestForUser(request, itemForRequest));
         }
-        return requestForUsers;
+        return usersItemRequestResponses;
     }
 
     @Override
@@ -117,7 +117,7 @@ public class RequestServiceImpl implements RequestService {
                 .orElseThrow(() -> new NotFoundException("Запрос не найден"));
     }
 
-    public RequestForUser getRequestByIdForUser(Integer requestId, Integer userId) {
+    public UsersItemRequestResponse getRequestByIdForUser(Integer requestId, Integer userId) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
@@ -130,6 +130,6 @@ public class RequestServiceImpl implements RequestService {
             itemForRequests.add(itemMapper.itemForRequestFromItem(item));
         }
 
-        return requestMapper.requestForUser(getRequestById(requestId), itemForRequests);
+        return itemRequestMapper.requestForUser(getRequestById(requestId), itemForRequests);
     }
 }

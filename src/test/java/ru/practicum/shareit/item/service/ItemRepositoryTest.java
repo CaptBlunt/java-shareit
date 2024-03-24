@@ -33,55 +33,15 @@ class ItemRepositoryTest {
     @Autowired
     private RequestRepository requestRepository;
 
-    User user = User.builder()
-            .email("bob@gamail.com")
-            .name("Bob").build();
-       /* user.setEmail("bob@gamail.com");
-        user.setName("Bob");*/
+    User user = new User("bob@gamail.com", "Bob");
 
+    Item itemTwo = new Item("Str", "Tst", user, true);
 
-    /*Item item = Item.builder()
-            .name("Test")
-            .description("Test")
-            .owner(user)
-            .available(true)
-            .request(request).build();*/
-        /*item.setName("Test");
-        item.setDescription("Test");
-        item.setOwner(user);
-        item.setAvailable(true);*/
+    User userTwo = new User("bob2@gamail.com", "Bob2");
 
-    Item itemTwo = Item.builder()
-            .name("Str")
-            .description("Tst")
-            .owner(user)
-            .available(true).build();
-        /*itemTwo.setName("Str");
-        itemTwo.setDescription("Tst");
-        itemTwo.setOwner(user);
-        itemTwo.setAvailable(true);
-        itemRepository.save(itemTwo);*/
+    Request request = new Request("test", userTwo, LocalDateTime.now());
 
-    User userTwo = User.builder()
-            .email("bob2@gamail.com")
-            .name("Bob2")
-            .build();
-
-    Request request = Request.builder()
-            .description("test")
-            .requestor(userTwo)
-            .createdDate(LocalDateTime.now()).build();
-        /*request.setDescription("fdasfsaf");
-        request.setRequestor(userTwo);
-        request.setCreatedDate(LocalDateTime.now());
-        requestRepository.save(request);*/
-
-    Item item = Item.builder()
-            .name("Test")
-            .description("Test")
-            .owner(user)
-            .available(true)
-            .request(request).build();
+    Item item = new Item("Test", "Test", user, true, request);
 
 
     @BeforeEach
@@ -100,18 +60,6 @@ class ItemRepositoryTest {
 
     @Test
     void findByOwnerId() {
-       /* User user = new User();
-        user.setEmail("bob@gamail.com");
-        user.setName("Bob");
-        userRepository.save(user);
-
-        Item item = new Item();
-        item.setName("Test");
-        item.setDescription("Test");
-        item.setOwner(user);
-        item.setAvailable(true);
-        itemRepository.save(item);*/
-
         PageRequest page = PageRequest.of(1 / 10, 10);
 
         List<Item> users = itemRepository.findByOwnerId(user.getId(), page);
@@ -122,26 +70,7 @@ class ItemRepositoryTest {
 
     @Test
     void findByNameContainingOrDescriptionContainingIgnoreCase() {
-        /*User user = new User();
-        user.setEmail("bob@gamail.com");
-        user.setName("Bob");
-        userRepository.save(user);*/
-
         String str = "es";
-
-       /* Item item = new Item();
-        item.setName("Test");
-        item.setDescription("Str");
-        item.setOwner(user);
-        item.setAvailable(true);
-        itemRepository.save(item);*/
-
-        /*Item item2 = new Item();
-        item2.setName("Str");
-        item2.setDescription("Tst");
-        item2.setOwner(user);
-        item2.setAvailable(true);
-        itemRepository.save(item2);*/
 
         PageRequest page = PageRequest.of(1 / 10, 10);
 
@@ -153,30 +82,6 @@ class ItemRepositoryTest {
 
     @Test
     void findByRequestId() {
-        /*User user = new User();
-        user.setEmail("bob@gamail.com");
-        user.setName("Bob");
-        userRepository.save(user);*/
-
-        /*User user2 = new User();
-        user2.setEmail("bob2@gamail.com");
-        user2.setName("Bob2");
-        userRepository.save(user2);
-
-        Request request = new Request();
-        request.setDescription("fdasfsaf");
-        request.setRequestor(user2);
-        request.setCreatedDate(LocalDateTime.now());
-        requestRepository.save(request);*/
-
-        /*Item item = new Item();
-        item.setName("Test");
-        item.setDescription("Test");
-        item.setOwner(user);
-        item.setAvailable(true);
-        item.setRequest(request);
-        itemRepository.save(item);*/
-
         Item item2 = itemRepository.findByRequestId(request.getId());
 
         assertEquals(item.getId(), item2.getId());

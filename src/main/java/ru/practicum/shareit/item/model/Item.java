@@ -26,13 +26,9 @@ public class Item {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @NotBlank(message = "Поле названия не может быть пустым")
-    @NotNull(message = "Поле названия не может быть null")
     @Column(nullable = false, length = 20)
     private String name;
 
-    @NotBlank(message = "Поле описания не может быть пустым")
-    @NotNull(message = "Поле описания не может быть null")
     @Column(nullable = false, length = 200)
     private String description;
 
@@ -51,8 +47,63 @@ public class Item {
     @Transient
     private List<CommentResponse> comments = new ArrayList<>();
 
-    @OneToOne
+    @ManyToOne
     @MaybeNull
     @JoinColumn(name = "request_id")
     private Request request;
+
+    public Item(Integer id, String name, String description, Boolean available, List<CommentResponse> comments) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.available = available;
+        this.comments = comments;
+    }
+
+    public Item(Integer id, String name, String description, Boolean available, List<CommentResponse> comments, Request request) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.available = available;
+        this.comments = comments;
+        this.request = request;
+    }
+
+    public Item(String name, String description, User owner, boolean available) {
+        this.name = name;
+        this.description = description;
+        this.owner = owner;
+        this.available = available;
+    }
+
+    public Item(int id, String name, String description, User owner, CommentResponse commentResponse, boolean available) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.owner = owner;
+        this.available = available;
+    }
+
+    public Item(String name, String description, User owner, boolean available, Request request) {
+        this.name = name;
+        this.description = description;
+        this.owner = owner;
+        this.available = available;
+        this.request = request;
+    }
+
+    public Item(int id, String name, String description, boolean available) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.available = available;
+    }
+
+    public Item(int id, String name, String description, User owner, boolean available) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.owner = owner;
+        this.available = available;
+    }
 }

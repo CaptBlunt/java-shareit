@@ -13,6 +13,7 @@ import ru.practicum.shareit.item.dto.ItemUpdateRequest;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemServiceImpl;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @Slf4j
@@ -42,7 +43,7 @@ public class ItemController {
     }
 
     @PostMapping
-    public ItemResponse createItem(@RequestBody ItemRequest item, @RequestHeader(value = "X-Sharer-User-Id") Integer userId) {
+    public ItemResponse createItem(@RequestBody @Valid ItemRequest item, @RequestHeader(value = "X-Sharer-User-Id") Integer userId) {
         log.info("Пришёл POST запрос /items от пользователя id {} с телом {}", userId, item);
         Item response = itemService.createItem(itemMapper.itemFromItemRequest(item, userId));
         log.info("Отправлен ответ createItem /items с телом {}", response);
@@ -75,7 +76,7 @@ public class ItemController {
     }
 
     @PostMapping("/{id}/comment")
-    public CommentResponse createComment(@RequestBody CommentRequest comment, @PathVariable Integer id,
+    public CommentResponse createComment(@RequestBody @Valid CommentRequest comment, @PathVariable Integer id,
                                          @RequestHeader(value = "X-Sharer-User-Id") Integer userId) {
         log.info("Пришёл POST запрос /items/{}/comment от пользователя {} с телом {}", id, userId, comment);
         CommentResponse response = commentMapper.commentResponse(itemService.addComment(id, commentMapper.commentForCreate(comment), userId));

@@ -4,6 +4,8 @@ import lombok.Data;
 
 @Data
 public class ItemForBooking {
+
     private Integer id;
+
     private String name;
 }

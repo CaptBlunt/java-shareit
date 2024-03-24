@@ -20,13 +20,14 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Email(message = "Некорректный email")
-    @NotNull(message = "Поле не может быть null")
     @Column(nullable = false, length = 40)
     private String email;
 
-    @NotBlank(message = "Поле имени не может быть пустым")
-    @NotNull(message = "Поле имени не может быть null")
     @Column(nullable = false, length = 20)
     private String name;
+
+    public User(String email, String name) {
+        this.email = email;
+        this.name = name;
+    }
 }

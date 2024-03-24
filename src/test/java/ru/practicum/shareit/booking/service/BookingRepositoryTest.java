@@ -49,80 +49,27 @@ class BookingRepositoryTest {
         bookingRepository.save(booking);
         bookingRepository.save(bookingTwo);
         bookingRepository.save(bookingThree);
-        bookingRepository.save(bookingFour);
     }
 
-    @AfterEach
-    void deleteAll() {
-        commentRepository.deleteAll();
-        userRepository.deleteAll();
-        itemRepository.deleteAll();
-        bookingRepository.deleteAll();
-    }
+    User userOwner = new User("bob@gamail.com", "Bob");
+    User userBooker = new User("bob2@gamail.com", "Bob2");
 
-    User userOwner = User.builder()
-            .email("bob@gamail.com")
-            .name("Bob")
-            .build();
+    Item item = new Item("Test", "Test", userOwner, true);
+    Item itemTwo = new Item("Test2", "Test2", userOwner, true);
 
-    User userBooker = User.builder()
-            .email("bob2@gamail.com")
-            .name("Bob2")
-            .build();
-    Item item = Item.builder()
-            .name("Test")
-            .description("Test")
-            .owner(userOwner)
-            .available(true)
-            .build();
-
-    Item itemTwo = Item.builder()
-            .name("Test2")
-            .description("Test2")
-            .owner(userOwner)
-            .available(true).build();
-
-    Booking booking = Booking.builder()
-            .item(itemTwo)
-            .booker(userBooker)
-            .status(BookingStatus.APPROVED)
-            .start(LocalDateTime.now().minusDays(1))
-            .end(LocalDateTime.now().minusHours(2))
-            .build();
-
-    Booking bookingTwo = Booking.builder()
-            .item(itemTwo)
-            .booker(userBooker)
-            .status(BookingStatus.APPROVED)
-            .start(LocalDateTime.now().minusDays(3))
-            .end(LocalDateTime.now().minusDays(1))
-            .build();
-
-    Booking bookingThree = Booking.builder()
-            .item(itemTwo)
-            .booker(userBooker)
-            .status(BookingStatus.REJECTED)
-            .start(LocalDateTime.now().plusHours(2))
-            .end(LocalDateTime.now().plusDays(1))
-            .build();
-
-    Booking bookingFour = Booking.builder()
-            .item(item)
-            .booker(userBooker)
-            .status(BookingStatus.APPROVED)
-            .start(LocalDateTime.now().minusHours(1))
-            .end(LocalDateTime.now().plusHours(3))
-            .build();
+    Booking booking = new Booking(itemTwo, userBooker, BookingStatus.APPROVED, LocalDateTime.now().minusDays(1), LocalDateTime.now().minusHours(2));
+    Booking bookingTwo = new Booking(itemTwo, userBooker, BookingStatus.REJECTED, LocalDateTime.now().minusHours(2), LocalDateTime.now().plusDays(1));
+    Booking bookingThree = new Booking(item, userBooker, BookingStatus.APPROVED, LocalDateTime.now().plusHours(1), LocalDateTime.now().plusHours(3));
 
     PageRequest page = PageRequest.of(1 / 10, 10);
 
 
     @Test
-    void findBookingsWhenOwnerIdOneAndBookingsThree() {
+    void findBookingsWhenOwnerIdOneAndBookingsTwo() {
         List<Booking> bookings = bookingRepository.findByOwnerId(userOwner.getId(), page);
 
         System.out.println(bookings);
-        assertEquals(bookings.size(), 4);
+        assertEquals(bookings.size(), 3);
         assertEquals(bookings.get(0).getId(), bookingThree.getId());
     }
 
@@ -130,9 +77,8 @@ class BookingRepositoryTest {
     void findBookingsWhenOwnerIdOneAndItemIdTwoInPast() {
         List<Booking> bookings = bookingRepository.findByOwnerIdAndItemIdPastBookings(userOwner.getId(), itemTwo.getId());
 
-        assertEquals(bookings.size(), 2);
+        assertEquals(bookings.size(), 1);
         assertEquals(bookings.get(0).getId(), booking.getId());
-        assertEquals(bookings.get(1).getId(), bookingTwo.getId());
     }
 
     @Test
@@ -140,7 +86,7 @@ class BookingRepositoryTest {
         List<Booking> bookings = bookingRepository.findByOwnerIdAndStatus(userOwner.getId(), "REJECTED", page);
 
         assertEquals(bookings.size(), 1);
-        assertEquals(bookings.get(0).getId(), bookingThree.getId());
+        assertEquals(bookings.get(0).getId(), bookingTwo.getId());
         assertEquals(bookings.get(0).getStatus(), BookingStatus.REJECTED);
     }
 

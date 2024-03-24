@@ -12,8 +12,8 @@ import ru.practicum.shareit.item.dto.ItemForRequest;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemRepository;
-import ru.practicum.shareit.request.dto.RequestForUser;
-import ru.practicum.shareit.request.dto.RequestMapper;
+import ru.practicum.shareit.request.dto.UsersItemRequestResponse;
+import ru.practicum.shareit.request.dto.ItemRequestMapper;
 import ru.practicum.shareit.request.model.Request;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserRepository;
@@ -45,7 +45,7 @@ class RequestServiceImplTest {
     @Mock
     private ItemMapper itemMapper;
     @Mock
-    private RequestMapper requestMapper;
+    private ItemRequestMapper itemRequestMapper;
 
     @Test
     void createRequestWhenRequestValid() {
@@ -111,7 +111,7 @@ class RequestServiceImplTest {
 
         List<Request> requests = List.of(request);
 
-        RequestForUser requestT = RequestForUser.builder()
+        UsersItemRequestResponse requestT = UsersItemRequestResponse.builder()
                 .id(1)
                 .description("test")
                 .created(LocalDateTime.now().minusDays(1))
@@ -119,7 +119,7 @@ class RequestServiceImplTest {
                 .items(items)
                 .build();
 
-        List<RequestForUser> requestForUsers = List.of(requestT);
+        List<UsersItemRequestResponse> usersItemRequestResponses = List.of(requestT);
         when(userRepository.findById(userId)).thenReturn(Optional.of(requestor));
 
         when(requestService.getRequests(userId)).thenReturn(requests);
@@ -128,12 +128,12 @@ class RequestServiceImplTest {
 
         when(itemMapper.itemForRequestFromItem(item)).thenReturn(itemZ);
 
-        when(requestMapper.requestForUser(request, items)).thenReturn(requestT);
+        when(itemRequestMapper.requestForUser(request, items)).thenReturn(requestT);
 
-        List<RequestForUser> result = requestService.getRequestsForUser(userId);
+        List<UsersItemRequestResponse> result = requestService.getRequestsForUser(userId);
 
-        assertEquals(result.size(), requestForUsers.size());
-        assertEquals(result.get(0), requestForUsers.get(0));
+        assertEquals(result.size(), usersItemRequestResponses.size());
+        assertEquals(result.get(0), usersItemRequestResponses.get(0));
     }
 
     @Test
@@ -213,13 +213,13 @@ class RequestServiceImplTest {
         List<Request> requests = Collections.singletonList(request);
 
         PageRequest page = PageRequest.of(from / size, size);
-        RequestForUser requestForUser = RequestForUser.builder()
+        UsersItemRequestResponse usersItemRequestResponse = UsersItemRequestResponse.builder()
                 .id(1)
                 .description("dasd")
                 .items(itemForRequest)
                 .build();
 
-        List<RequestForUser> requestForUsers = Collections.singletonList(requestForUser);
+        List<UsersItemRequestResponse> usersItemRequestResponses = Collections.singletonList(usersItemRequestResponse);
 
         when(requestRepository.findAllNotForCreator(eq(userId), eq(page))).thenReturn(requests);
 
@@ -227,11 +227,11 @@ class RequestServiceImplTest {
 
         when(itemMapper.itemForRequestFromItem(item)).thenReturn(request1);
 
-        when(requestMapper.requestForUser(request, itemForRequest)).thenReturn(requestForUser);
+        when(itemRequestMapper.requestForUser(request, itemForRequest)).thenReturn(usersItemRequestResponse);
 
-        List<RequestForUser> result = requestService.getAllRequestForUser(userId, from, size);
+        List<UsersItemRequestResponse> result = requestService.getAllRequestForUser(userId, from, size);
 
-        assertEquals(result.get(0).getId(), requestForUsers.get(0).getId());
+        assertEquals(result.get(0).getId(), usersItemRequestResponses.get(0).getId());
     }
 
     @Test
@@ -274,7 +274,7 @@ class RequestServiceImplTest {
                 .available(true)
                 .requestId(requestId).build();
 
-        RequestForUser requestResp = RequestForUser.builder()
+        UsersItemRequestResponse requestResp = UsersItemRequestResponse.builder()
                 .id(requestId)
                 .description("Test")
                 .created(LocalDateTime.now().minusDays(1))
@@ -292,9 +292,9 @@ class RequestServiceImplTest {
 
         when(itemMapper.itemForRequestFromItem(item)).thenReturn(itemForRequest);
 
-        when(requestMapper.requestForUser(request, requestList)).thenReturn(requestResp);
+        when(itemRequestMapper.requestForUser(request, requestList)).thenReturn(requestResp);
 
-        RequestForUser result = requestService.getRequestByIdForUser(requestId, userId);
+        UsersItemRequestResponse result = requestService.getRequestByIdForUser(requestId, userId);
 
         assertEquals(result.getId(), request.getId());
         assertEquals(result.getDescription(), request.getDescription());

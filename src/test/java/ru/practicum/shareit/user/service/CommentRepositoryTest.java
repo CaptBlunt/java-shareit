@@ -38,20 +38,13 @@ class CommentRepositoryTest {
 
     @Test
     void testFindByItemIdAndOwnerId() {
-        User owner = new User();
-        owner.setEmail("bob@gamail.com");
-        owner.setName("Bob");
+        User owner = new User("bob@gamail.com", "Bob");
         userRepository.save(owner);
 
-        User user2 = new User();
-        user2.setName("Bob2");
-        user2.setEmail("bob2@gamail.com");
+        User user2 = new User("bob2@gamail.com", "Bob2");
         userRepository.save(user2);
-        Item item = new Item();
-        item.setName("Test");
-        item.setDescription("Test Item");
-        item.setOwner(owner);
-        item.setAvailable(true);
+
+        Item item = new Item("Test", "Test Item", owner, true);
         itemRepository.save(item);
 
         String str1 = "2024-03-09 12:30";
@@ -61,19 +54,11 @@ class CommentRepositoryTest {
         LocalDateTime dateTime1 = LocalDateTime.parse(str1, formatter);
         LocalDateTime dateTime2 = LocalDateTime.parse(str2, formatter);
 
-        Comment comment = new Comment();
-        comment.setText("TestTestTest");
-        comment.setItem(item);
-        comment.setCreated(dateTime1);
-        comment.setAuthorName(user2);
+        Comment comment = new Comment("TestTestTest", item, dateTime1, user2);
 
         commentRepository.save(comment);
 
-        Comment comment2 = new Comment();
-        comment2.setText("Test2Test2Test2");
-        comment2.setItem(item);
-        comment2.setCreated(dateTime2);
-        comment2.setAuthorName(user2);
+        Comment comment2 = new Comment("Test2Test2Test2", item, dateTime2, user2);
 
         commentRepository.save(comment2);
 

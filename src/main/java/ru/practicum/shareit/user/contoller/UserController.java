@@ -37,7 +37,7 @@ public class UserController {
     }
 
     @PostMapping
-    public UserResponse createUser(@Valid @RequestBody UserRequest user) {
+    public UserResponse createUser(@RequestBody @Valid UserRequest user) {
         log.info("Пришёл POST запрос /users с телом {}", user);
         UserResponse response = userMapper.userResponseFromUser(userService.createUser(userMapper.userFromUserRequest(user)));
         log.info("Отправлен ответ createUser /users с телом {}", response);

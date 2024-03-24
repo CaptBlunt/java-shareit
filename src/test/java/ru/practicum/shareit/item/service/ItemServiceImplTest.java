@@ -54,53 +54,23 @@ class ItemServiceImplTest {
     private ItemMapper itemMapper;
 
 
-    User user = User.builder()
-            .id(1)
-            .build();
+    User user = new User(1, "dsaadsd", "author");
+    User userTwo = new User(7, "dsaadsd", "author");
 
-    User userTwo = User.builder()
-            .id(7)
-            .email("dsaadsd")
-            .name("author")
-            .build();
-
-    CommentResponse commentResponse = CommentResponse.builder()
-            .id(1)
-            .text("dasd")
-            .authorName("name")
-            .created(LocalDateTime.now().minusDays(1))
-            .build();
+    CommentResponse commentResponse = new CommentResponse(1, "dasd", "name", LocalDateTime.now().minusDays(1));
 
     List<CommentResponse> commentResponses = List.of(commentResponse);
 
-    Item item = Item.builder()
-            .id(1)
-            .name("Test Item")
-            .description("Test Description")
-            .owner(user)
-            .comments(commentResponses)
-            .available(true).build();
-
-    Item itemUpd = Item.builder()
-            .id(1)
-            .owner(userTwo)
-            .build();
+    Item item = new Item(1, "Test Item", "Test Description", user, commentResponse, true);
+    Item itemUpd = new Item(1, "Test Item", "Test Description", userTwo, commentResponse, true);
 
     List<Item> items = List.of(item);
 
-    Comment comment = Comment.builder()
-            .id(1)
-            .text("dasd")
-            .item(item)
-            .authorName(userTwo)
-            .created(LocalDateTime.now().minusDays(1))
-            .build();
+    Comment comment = new Comment(1, "dasd", item, userTwo, LocalDateTime.now().minusDays(1));
     List<Comment> comments = List.of(comment);
 
-    Booking bookingLast = Booking.builder()
-            .build();
-    Booking bookingFuture = Booking.builder()
-            .build();
+    Booking bookingLast = new Booking();
+    Booking bookingFuture = new Booking();
 
     List<Booking> bookings = List.of(bookingLast, bookingFuture);
     List<Booking> pastBookings = List.of(bookingLast);
@@ -355,17 +325,6 @@ class ItemServiceImplTest {
 
         assertEquals(itemsResult.size(), items.size());
         assertEquals(itemsResult.get(0), items.get(0));
-    }
-
-    @Test
-    void validationItem() {
-        Item item = Item.builder()
-                .name("")
-                .build();
-
-        ValidateException exception = assertThrows(ValidateException.class, () -> itemService.validateItem(item));
-
-        assertEquals("Некорректно указаны данные", exception.getMessage());
     }
 
     @Test

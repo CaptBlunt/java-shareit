@@ -2,6 +2,7 @@ package ru.practicum.shareit.comments.dto;
 
 import lombok.*;
 
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Data

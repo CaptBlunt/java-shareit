@@ -11,13 +11,13 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class RequestMapperTest {
+class ItemRequestMapperTest {
 
-    private RequestMapper requestMapper;
+    private ItemRequestMapper itemRequestMapper;
 
     @BeforeEach
     void setUp() {
-        requestMapper = new RequestMapper();
+        itemRequestMapper = new ItemRequestMapper();
     }
 
     @Test
@@ -30,10 +30,10 @@ class RequestMapperTest {
 
         List<ItemForRequest> items = new ArrayList<>();
 
-        RequestForUser requestForUser = requestMapper.requestForUser(request, items);
+        UsersItemRequestResponse usersItemRequestResponse = itemRequestMapper.requestForUser(request, items);
 
-        assertEquals(requestForUser.getId(), request.getId());
-        assertEquals(requestForUser.getDescription(), request.getDescription());
-        assertEquals(requestForUser.getCreated(), request.getCreatedDate());
+        assertEquals(usersItemRequestResponse.getId(), request.getId());
+        assertEquals(usersItemRequestResponse.getDescription(), request.getDescription());
+        assertEquals(usersItemRequestResponse.getCreated(), request.getCreatedDate());
     }
 }

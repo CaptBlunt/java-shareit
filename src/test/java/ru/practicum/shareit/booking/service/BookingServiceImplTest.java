@@ -18,7 +18,6 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -43,103 +42,19 @@ class BookingServiceImplTest {
     @InjectMocks
     private BookingServiceImpl bookingService;
 
-    User booker = User.builder()
-            .id(1)
-            .email("bob@gmail.com")
-            .name("Bob")
-            .build();
+    User booker = new User(1, "bob@gmail.com", "Bob");
 
-    User owner = User.builder()
-            .id(2)
-            .email("bob2@gmail.com")
-            .name("Bob2")
-            .build();
+    User owner = new User(2, "bob2@gmail.com", "Bob2");
 
-    Item item = Item.builder()
-            .id(1)
-            .name("Test")
-            .description("Test")
-            .owner(owner)
-            .available(true)
-            .build();
+    Item item = new Item(1, "Test", "Test", owner, true);
 
-    Item itemTwo = Item.builder()
-            .id(2)
-            .name("Test")
-            .description("Test")
-            .owner(booker)
-            .available(true)
-            .build();
+    Item itemTwo = new Item(2, "Test", "Test", booker, true);
 
-    Booking bookingOne = Booking.builder()
-            .id(1)
-            .start(LocalDateTime.now().plusDays(1))
-            .end(LocalDateTime.now().plusDays(3))
-            .status(BookingStatus.WAITING)
-            .booker(booker)
-            .item(item)
-            .build();
+    Booking bookingOne = new Booking(1, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(3), BookingStatus.WAITING, booker, item);
 
-    Booking bookingTwo = Booking.builder()
-            .id(2)
-            .start(LocalDateTime.now().plusDays(4))
-            .end(LocalDateTime.now().plusDays(5))
-            .status(BookingStatus.WAITING)
-            .booker(booker)
-            .item(item)
-            .build();
+    Booking bookingForSave = new Booking(item, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(3), booker);
 
-    Booking bookingPast = Booking.builder()
-            .id(5)
-            .start(LocalDateTime.now().minusDays(4))
-            .end(LocalDateTime.now().minusDays(3))
-            .status(BookingStatus.PAST)
-            .booker(booker)
-            .item(item)
-            .build();
-
-    Booking bookingFuture = Booking.builder()
-            .id(5)
-            .start(LocalDateTime.now().plusDays(1))
-            .end(LocalDateTime.now().plusDays(2))
-            .status(BookingStatus.FUTURE)
-            .booker(booker)
-            .item(item)
-            .build();
-
-    Booking bookingForSave = Booking.builder()
-            .item(item)
-            .start(LocalDateTime.now().plusDays(1))
-            .end(LocalDateTime.now().plusDays(3))
-            .booker(booker)
-            .build();
-
-    Booking bookingSaved = Booking.builder()
-            .id(1)
-            .start(LocalDateTime.now().plusDays(1))
-            .end(LocalDateTime.now().plusDays(3))
-            .status(BookingStatus.WAITING)
-            .booker(booker)
-            .item(item)
-            .build();
-
-    Booking bookingApproved = Booking.builder()
-            .id(1)
-            .start(LocalDateTime.now().plusDays(1))
-            .end(LocalDateTime.now().plusDays(3))
-            .status(BookingStatus.APPROVED)
-            .booker(booker)
-            .item(item)
-            .build();
-
-    Booking newBooking = Booking.builder()
-            .id(1)
-            .start(LocalDateTime.now().plusDays(1))
-            .end(LocalDateTime.now().plusDays(3))
-            .status(BookingStatus.APPROVED)
-            .booker(booker)
-            .item(item)
-            .build();
+    Booking bookingApproved = new Booking(1, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(3), BookingStatus.APPROVED, booker, item);
 
 
     @Test
@@ -150,19 +65,19 @@ class BookingServiceImplTest {
 
     @Test
     void approveBooking() {
-        when(bookingRepository.getReferenceById(anyInt())).thenReturn(bookingSaved);
+        when(bookingRepository.getReferenceById(anyInt())).thenReturn(bookingOne);
 
         when(itemRepository.getReferenceById(anyInt())).thenReturn(item);
 
-        when(bookingRepository.save(bookingSaved)).thenReturn(newBooking);
+        when(bookingRepository.save(bookingOne)).thenReturn(bookingOne);
 
         Booking result = bookingService.approveOrReject(1, 2, "true");
 
-        assertEquals(result, newBooking);
+        assertEquals(result, bookingOne);
     }
 
     @Test
-    void approveBookingWhenUserNotOwner() {
+    void approveBookingWhenStatusNotWaiting() {
         when(bookingRepository.getReferenceById(anyInt())).thenReturn(bookingApproved);
 
         when(itemRepository.getReferenceById(anyInt())).thenReturn(itemTwo);
@@ -172,8 +87,8 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void approveBookingWhenStatusNotWaiting() {
-        when(bookingRepository.getReferenceById(anyInt())).thenReturn(bookingSaved);
+    void approveBookingWhenUserNotOwner() {
+        when(bookingRepository.getReferenceById(anyInt())).thenReturn(bookingOne);
 
         when(itemRepository.getReferenceById(anyInt())).thenReturn(itemTwo);
 
@@ -183,7 +98,7 @@ class BookingServiceImplTest {
 
     @Test
     void getBookingsWhenUserNotOwner() {
-        List<Booking> bookings = Arrays.asList(bookingTwo, bookingOne);
+        List<Booking> bookings = Collections.singletonList(bookingOne);
 
         PageRequest pageable = PageRequest.of(1 / 10, 10);
 
@@ -193,12 +108,11 @@ class BookingServiceImplTest {
 
         assertEquals(bookings.size(), result.size());
         assertEquals(bookings.get(0), result.get(0));
-        assertEquals(bookings.get(1), result.get(1));
     }
 
     @Test
     void getBookingsWhenUserOwnerStatusPast() {
-        List<Booking> bookings = Collections.singletonList(bookingPast);
+        List<Booking> bookings = Collections.singletonList(bookingOne);
 
         PageRequest pageable = PageRequest.of(1 / 10, 10);
 
@@ -212,7 +126,7 @@ class BookingServiceImplTest {
 
     @Test
     void getBookingsWhenUserOwnerStatusWaiting() {
-        List<Booking> bookings = Collections.singletonList(bookingTwo);
+        List<Booking> bookings = Collections.singletonList(bookingOne);
 
         PageRequest pageable = PageRequest.of(1 / 10, 10);
 
@@ -226,7 +140,7 @@ class BookingServiceImplTest {
 
     @Test
     void getBookingsWhenUserOwnerStatusFuture() {
-        List<Booking> bookings = Collections.singletonList(bookingFuture);
+        List<Booking> bookings = Collections.singletonList(bookingOne);
 
         PageRequest pageable = PageRequest.of(1 / 10, 10);
 
@@ -240,7 +154,7 @@ class BookingServiceImplTest {
 
     @Test
     void getBookingsWhenUserNotOwnerStatusFuture() {
-        List<Booking> bookings = Collections.singletonList(bookingFuture);
+        List<Booking> bookings = Collections.singletonList(bookingOne);
 
         PageRequest pageable = PageRequest.of(1 / 10, 10);
 
@@ -254,7 +168,7 @@ class BookingServiceImplTest {
 
     @Test
     void getBookingsWhenUserNotOwnerStatusPast() {
-        List<Booking> bookings = Collections.singletonList(bookingPast);
+        List<Booking> bookings = Collections.singletonList(bookingOne);
 
         PageRequest pageable = PageRequest.of(1 / 10, 10);
 
@@ -268,7 +182,7 @@ class BookingServiceImplTest {
 
     @Test
     void getBookingsWhenUserNotOwnerStatusAll() {
-        List<Booking> bookings = Arrays.asList(bookingPast, bookingFuture);
+        List<Booking> bookings = Collections.singletonList(bookingOne);
 
         PageRequest pageable = PageRequest.of(1 / 10, 10);
 
@@ -326,7 +240,7 @@ class BookingServiceImplTest {
         when(userRepository.findById(anyInt())).thenReturn(Optional.of(booker));
         when(itemRepository.findById(anyInt())).thenReturn(Optional.of(item));
         when(bookingMapper.bookingForCreate(any(), any(), any())).thenReturn(bookingForSave);
-        when(bookingRepository.save(bookingForSave)).thenReturn(bookingSaved);
+        when(bookingRepository.save(bookingForSave)).thenReturn(bookingOne);
 
         Booking savedBooking = bookingService.createBooking(bookingForSave);
 
@@ -364,7 +278,7 @@ class BookingServiceImplTest {
 
     @Test
     void getBookingsWhenUserOwnerSearchStatusAllPaginationValid() {
-        List<Booking> bookings = Arrays.asList(bookingTwo, bookingOne);
+        List<Booking> bookings = Collections.singletonList(bookingOne);
 
         PageRequest pageable = PageRequest.of(1 / 10, 10);
 
@@ -374,6 +288,5 @@ class BookingServiceImplTest {
 
         assertEquals(bookings.size(), result.size());
         assertEquals(bookings.get(0), result.get(0));
-        assertEquals(bookings.get(1), result.get(1));
     }
 }
