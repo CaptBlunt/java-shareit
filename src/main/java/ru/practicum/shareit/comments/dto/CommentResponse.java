@@ -1,10 +1,14 @@
 package ru.practicum.shareit.comments.dto;
 
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Data
+@Builder
+@AllArgsConstructor
+@EqualsAndHashCode(of = "id")
+@RequiredArgsConstructor
 public class CommentResponse {
 
     private Integer id;

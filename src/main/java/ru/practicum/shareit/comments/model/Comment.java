@@ -1,6 +1,6 @@
 package ru.practicum.shareit.comments.model;
 
-import lombok.Data;
+import lombok.*;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
@@ -8,8 +8,12 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Data
+@Builder
+@EqualsAndHashCode(of = "id")
 @Entity
 @Table(name = "comments")
+@AllArgsConstructor
+@RequiredArgsConstructor
 public class Comment {
 
     @Id
@@ -28,4 +32,18 @@ public class Comment {
 
     @Column(name = "created_date")
     private LocalDateTime created;
+
+    public Comment(String text, Item item, LocalDateTime created, User authorName) {
+        this.text = text;
+        this.item = item;
+        this.created = created;
+        this.authorName = authorName;
+    }
+
+    public Comment(int id, String text, User authorName, LocalDateTime created) {
+        this.id = id;
+        this.text = text;
+        this.created = created;
+        this.authorName = authorName;
+    }
 }

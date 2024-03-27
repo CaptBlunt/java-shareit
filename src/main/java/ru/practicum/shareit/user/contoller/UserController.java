@@ -3,9 +3,9 @@ package ru.practicum.shareit.user.contoller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.user.dto.UserResponse;
 import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.dto.UserRequest;
+import ru.practicum.shareit.user.dto.UserResponse;
 import ru.practicum.shareit.user.service.UserServiceImpl;
 
 import javax.validation.Valid;
@@ -25,7 +25,7 @@ public class UserController {
         log.info("Пришёл GET запрос /users");
         List<UserResponse> response = userMapper.usersResponseFromUsers(userService.getAllUsers());
         log.info("Отправлен ответ getAllUsers /users с телом {}", response);
-        return response;
+        return userMapper.usersResponseFromUsers(userService.getAllUsers());
     }
 
     @GetMapping("/{id}")
@@ -37,7 +37,7 @@ public class UserController {
     }
 
     @PostMapping
-    public UserResponse createUser(@Valid @RequestBody UserRequest user) {
+    public UserResponse createUser(@RequestBody @Valid UserRequest user) {
         log.info("Пришёл POST запрос /users с телом {}", user);
         UserResponse response = userMapper.userResponseFromUser(userService.createUser(userMapper.userFromUserRequest(user)));
         log.info("Отправлен ответ createUser /users с телом {}", response);

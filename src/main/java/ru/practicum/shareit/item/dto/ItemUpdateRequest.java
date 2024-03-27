@@ -18,5 +18,7 @@ public class ItemUpdateRequest {
     @NotNull(message = "Поле описания не может быть null")
     private String description;
 
+    @NotBlank(message = "Поле доступности не может быть пустым")
+    @NotNull(message = "Поле доступности не может быть null")
     private Boolean available;
 }
