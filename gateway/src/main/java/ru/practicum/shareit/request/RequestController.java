@@ -27,7 +27,7 @@ public class RequestController {
 
     @GetMapping("/all")
     public ResponseEntity<Object> getAllRequests(@RequestHeader(value = "X-Sharer-User-Id") Long userId, @RequestParam(required = false, defaultValue = "0") Integer from, @RequestParam(required = false, defaultValue = "10") Integer size) {
-        return requestClient.getAllRequests(userId, from ,size);
+        return requestClient.getAllRequests(userId, from, size);
     }
 
     @GetMapping("/{id}")
